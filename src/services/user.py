@@ -6,7 +6,7 @@ from src.models.user import User
 from src.utils.password import PasswordUtils
 from src.utils.exceptions import BadRequestException
 
-from typing import List
+from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 class UserService:
@@ -36,7 +36,7 @@ class UserService:
         user = await self.find_or_fail(db, user_id)
         await self.repo.delete(db, user)
 
-    async def get_one(self, db: AsyncSession, filter_data: IFilterUser) -> UserDto | None:
+    async def get_one(self, db: AsyncSession, filter_data: IFilterUser) -> Optional[UserDto]:
         user = await self.repo.get_one(db, filter_data)
         if user is None:
             return None

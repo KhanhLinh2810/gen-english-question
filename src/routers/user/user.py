@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from typing import Optional
 
-from interfaces.user import IUpdateUser, IFilterUser
-from interfaces.auth import IPagination
-from middlewares.authenticate import authenticate
-from services.user import UserService, get_user_service
-from utils.response import res_ok
+from src.interfaces.user import IUpdateUser, IFilterUser
+from src.interfaces.auth import IPagination
+from src.middlewares.authenticate import authenticate
+from src.services.user import UserService, get_user_service
+from src.utils.response import res_ok
 
 router = APIRouter(
     prefix="/users",

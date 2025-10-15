@@ -7,6 +7,6 @@ class ModelInput(BaseModel):
     context: str
     name: str
 
-class ICreateQuestion(BaseModel):
+class ICQuestion(BaseModel):
     context: str
     name: str

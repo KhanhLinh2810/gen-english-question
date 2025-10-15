@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from src.utils.response import res_ok
 from src.utils.text_process import vietnamese_to_english, english_to_vietnamese, get_all_summary, get_all_questions
-from src.interfaces.question import ModelInput, ICreateQuestion
+from src.interfaces.question import ModelInput, ICQuestion
 from src.services.AI.abstractive_summarizer import AbstractiveSummarizer
 from src.services.AI.question_generator import QuestionGenerator    
 from src.services.AI.false_ans_generator import FalseAnswerGenerator
@@ -12,7 +12,7 @@ from src.services.AI.keyword_extractor import KeywordExtractor
 route = APIRouter(prefix="/question", tags=["Question"])
 print("Including question routes...")
 @route.post('/sentence')
-async def generate_questions_from_sentence(body: ICreateQuestion, request: Request):
+async def generate_questions_from_sentence(body: ICQuestion, request: Request):
     """Process user request
 
     Args:
