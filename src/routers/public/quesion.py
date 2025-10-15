@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from src.factories.gen_question.question import create_question_instance
 from src.utils.response import res_ok
 from src.utils.text_process import vietnamese_to_english, english_to_vietnamese, get_all_summary, get_all_questions
-from src.interfaces.question import ModelInput, ICQuestion
+from src.interfaces.question import ModelInput, ICQuestion, ICreateQuestion
 from src.services.AI.abstractive_summarizer import AbstractiveSummarizer
 from src.services.AI.question_generator import QuestionGenerator    
 from src.services.AI.false_ans_generator import FalseAnswerGenerator
@@ -11,8 +12,20 @@ from src.services.AI.keyword_extractor import KeywordExtractor
 
 route = APIRouter(prefix="/question", tags=["Question"])
 print("Including question routes...")
+
+@route.post('/')
+async def generate_question(body: ICreateQuestion):
+    question = create_question_instance(body.question_type)
+    list_questions = question.generate_questions(
+        list_words=body.list_words,
+        num_question=body.num_question,
+        num_ans_per_question=body.num_ans_per_question,
+    )
+    print(list_questions)
+    return JSONResponse(status_code=200, content=res_ok(list_questions))
+
 @route.post('/sentence')
-async def generate_questions_from_sentence(body: ICQuestion, request: Request):
+async def generate_questions_from_sentence(bßody: ICQuestion, request: Request):
     """Process user request
 
     Args:

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Set
+from typing import Set, Optional
 
+import requests
 import nltk
 
 nltk.download('words')
@@ -10,7 +11,7 @@ nltk_words = words.words()
 
 class Question(ABC):
     @abstractmethod
-    def generate_questions(self, words: Set[str], num_questions: int = 1, num_ans_per_question: int = 4):
+    def generate_questions(self, list_words: Set[str], num_questions: int = 1, num_ans_per_question: int = 4):
         pass
 
     @staticmethod
@@ -20,3 +21,17 @@ class Question(ABC):
             num_ans_per_question: int = 4
     ) -> int:
         return min(len_list_words//num_questions, num_ans_per_question)
+
+    @staticmethod
+    def fetch_word_data(word: str) -> Optional[dict]:
+        """API get data of word"""
+        try:
+            base_url = "https://api.dictionaryapi.dev/api/v2/entries/en/"
+            resp = requests.get(base_url + word)
+            if resp.status_code == 200:
+                data = resp.json()
+                return data[0]
+            else:
+                return None
+        except Exception as e:
+            return None
