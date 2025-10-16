@@ -9,10 +9,8 @@ class Question(BaseModel):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    topic = Column(String(100), nullable=False)
-    context = Column(Text, nullable=False) 
-    question_text = Column(Text, nullable=False)
-    correct_choice = Column(String(255), nullable=False)
+    context = Column(Text, nullable=False)
+    description = Column(Text, nullable=True) # danh cho cau hoi doan van
     tags = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())  
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())  
