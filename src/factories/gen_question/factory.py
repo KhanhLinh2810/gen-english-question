@@ -1,8 +1,8 @@
 from src.enum.question import QuestionTypeEnum
-from src.factories.gen_question.antonym_question import AntonymsQuestion
-from src.factories.gen_question.incorrect_word_question import IncorrectWordQuestion
-from src.factories.gen_question.stress_question import StressQuestion
-from src.factories.gen_question.synonym_question import SynonymsQuestion
+from src.factories.gen_question.types.antonym_question import AntonymsQuestion
+from src.factories.gen_question.types.incorrect_word_question import IncorrectWordQuestion
+from src.factories.gen_question.types.stress_question import StressQuestion
+from src.factories.gen_question.types.synonym_question import SynonymsQuestion
 from src.utils.exceptions import BadRequestException
 
 

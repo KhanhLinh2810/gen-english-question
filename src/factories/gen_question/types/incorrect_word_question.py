@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Optional
 import random
 
 from src.enum.question import QuestionTypeEnum
-from src.factories.gen_question.base import Question, nltk_words
-from src.services.AI.sentence_generator import SentenceGeneratorModel
-from src.utils.word import transform_word
+from src.enum.word import TransformWordType
+from src.factories.gen_question.types.base import Question, nltk_words
+from src.factories.transform_word.factory import transform_word_instance
 
 
 class IncorrectWordQuestion(Question):
@@ -55,7 +55,7 @@ class IncorrectWordQuestion(Question):
             sentence_words.remove(correct_word)
 
             # 3. Replace it with a grammatically incorrect word
-            incorrect_word = transform_word(correct_word)
+            incorrect_word = self.create_incorrect_word(correct_word)
             modified_sentence = sentence.replace(correct_word, incorrect_word, 1)
 
             # 4. Create choices (including incorrect_word and distractors)
@@ -71,3 +71,18 @@ class IncorrectWordQuestion(Question):
             })
 
         return result
+
+    @staticmethod
+    def create_incorrect_word(word: str) -> Optional[str]:
+        list_transform_type = list(TransformWordType)
+        random.shuffle(list_transform_type)
+        for t in list_transform_type:
+            transformer = transform_word_instance(t)
+            incorrect_word = transformer.transform_word(word)
+            if incorrect_word is not None and incorrect_word != word:
+                return incorrect_word
+
+        try:
+            return random.choice(nltk_words) if nltk_words else None
+        except ImportError:
+            return None

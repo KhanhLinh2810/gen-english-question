@@ -1,17 +1,17 @@
 from typing import List
 import random
 
-from src.factories.gen_question.base import Question, nltk_words
+from src.factories.gen_question.types.base import Question, nltk_words
 from src.enum.question import QuestionTypeEnum
 
 
-class AntonymsQuestion(Question):
+class SynonymsQuestion(Question):
     """
     This class generates multiple-choice questions that ask the user
-    to select an antonym for a given word.
+    to select a synonym for a given word.
 
     It uses dictionary data (from fetch_word_data) to retrieve
-    meanings and antonyms. If the input list is empty or invalid,
+    meanings and synonyms. If the input list is empty or invalid,
     it falls back to randomly chosen words from a built-in word list (nltk_words).
     """
 
@@ -25,27 +25,27 @@ class AntonymsQuestion(Question):
         # Internal helper function to get a valid question/answer pair
         def get_question_and_answer():
             """
-            Randomly selects a word and finds one of its antonyms.
+            Randomly selects a word and finds one of its synonyms.
 
             Returns:
-                tuple(str, str): question_word, antonym_answer
+                tuple(str, str): question_word, synonym_answer
             """
             # Try from provided list word
             while list_unique_words:
                 source_word = random.sample(list(list_unique_words), 1)[0]
                 list_unique_words.remove(source_word)
-                antonym_word = self.get_antonym(source_word)
-                if antonym_word in list_unique_words:
-                    list_unique_words.remove(antonym_word)
-                if antonym_word:
-                    return source_word, antonym_word
+                synonym_word = self.get_synonym(source_word)
+                if synonym_word in list_unique_words:
+                    list_unique_words.remove(source_word)
+                if synonym_word:
+                    return source_word, synonym_word
 
             # Fallback: use nltk_words
             while True:
                 source_word = random.choice(nltk_words)
-                antonym_word = self.get_antonym(source_word)
-                if antonym_word:
-                    return source_word, antonym_word
+                synonym_word = self.get_synonym(source_word)
+                if synonym_word:
+                    return source_word, synonym_word
 
         for _ in range(num_question):
             question_word, correct_answer = get_question_and_answer()
@@ -66,7 +66,7 @@ class AntonymsQuestion(Question):
 
             result.append({
                 "question": question_word,
-                "type": QuestionTypeEnum.ANTONYM,
+                "type": QuestionTypeEnum.SYNONYM,
                 "choices": choices,
                 "answer": choices.index(correct_answer),
                 "explain": [],
@@ -74,17 +74,17 @@ class AntonymsQuestion(Question):
 
         return result
 
-    def get_antonym(self, word: str):
+    def get_synonym(self, word: str):
         """
-        Retrieves a random antonym for the given word using dictionary API data.
+        Retrieves a random synonym for the given word using dictionary API data.
 
-        It checks both the 'meanings.antonyms' and 'meanings.definitions.antonyms' fields.
+        It checks both the 'meanings.synonyms' and 'meanings.definitions.synonyms' fields.
 
         Args:
-            word (str): The input word to find an antonym for.
+            word (str): The input word to find a synonym for.
 
         Returns:
-            str or None: An antonym if found, else None.
+            str or None: A synonym if found, else None.
         """
         data = self.fetch_word_data(word)
         if not data:
@@ -92,21 +92,21 @@ class AntonymsQuestion(Question):
 
         meanings = data.get("meanings", [])
 
-        # Randomly search for antonyms in the meaning entries
+        # Randomly search for synonyms in the meaning entries
         while meanings:
             meaning = random.sample(meanings, 1)[0]
 
-            # Try top-level antonyms
-            antonyms = meaning.get("antonyms", [])
+            # Try top-level synonyms
+            synonyms = meaning.get("synonyms", [])
 
-            # Also check antonyms inside definitions
-            if not antonyms:
+            # Also check synonyms inside definitions
+            if not synonyms:
                 definitions = meaning.get("definitions", [])
                 for definition in definitions:
-                    antonyms.extend(definition.get("antonyms", []))
+                    synonyms.extend(definition.get("synonyms", []))
 
-            if antonyms:
-                return random.choice(antonyms)
+            if synonyms:
+                return random.choice(synonyms)
 
             meanings.remove(meaning)
 

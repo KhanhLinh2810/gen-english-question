@@ -45,7 +45,7 @@ import nltk
 nltk.download('wordnet')
 from nltk.corpus import wordnet as wn
 
-def transform_word(word: str) -> Optional[str]:
+def ç(word: str) -> Optional[str]:
     """
     Transform a word into another word by changing its type, tense, article-related form,
     or meaning to create an incorrect answer for a 'find the wrong word' question.
@@ -74,7 +74,7 @@ def transform_word(word: str) -> Optional[str]:
 
     # Fallback: return a random word from nltk_words if no transformation works
     try:
-        from src.factories.gen_question.base import nltk_words
+        from src.factories.gen_question.types.base import nltk_words
         return random.choice(nltk_words) if nltk_words else None
     except ImportError:
         return None

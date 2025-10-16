@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from src.factories.gen_question.question import create_question_instance
+from src.factories.gen_question.factory import create_question_instance
 from src.utils.response import res_ok
 from src.utils.text_process import vietnamese_to_english, english_to_vietnamese, get_all_summary, get_all_questions
 from src.interfaces.question import ModelInput, ICQuestion, ICreateQuestion

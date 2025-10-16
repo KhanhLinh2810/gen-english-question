@@ -12,10 +12,9 @@ class Question(BaseModel):
     context = Column(Text, nullable=False)
     description = Column(Text, nullable=True) # danh cho cau hoi doan van
     tags = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())  
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())  
 
-    
     user = relationship("User", back_populates="questions")
     choices = relationship("Choice", back_populates="question", cascade="all, delete", passive_deletes=True)
     comments = relationship("Comment", back_populates="question", cascade="all, delete", passive_deletes=True)
