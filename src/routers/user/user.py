@@ -37,6 +37,29 @@ async def index(
         )
     )
 
+@router.get("/")
+async def index(
+        paging: IPagination = Depends(IPagination),
+        keyword: Optional[str] = None,
+        user_service: UserService = Depends(get_user_service),
+):
+    await user_service.get_many(
+        paging,
+        IFilterUser(username_or_email=keyword)
+    )
+
+    return JSONResponse(
+        status_code=200,
+        content=res_ok(
+            # result["rows"],
+            10,
+            message="success",
+            page=paging.page,
+            limit=paging.limit,
+            total_item=100
+        )
+    )
+
 @router.get("/{user_id}")
 async def detail(user_id: int, user_service: UserService = Depends(get_user_service),):
     user = await user_service.find_or_fail(user_id)
