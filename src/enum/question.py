@@ -6,3 +6,5 @@ class QuestionTypeEnum(str, Enum):
     SYNONYM = "synonym" # tu dong nghia
     ANTONYM = "antonym" # tu trai nghia
     INCORRECT_WORD = "incorrect_word"
+    FILL_IN_BLANK = "fill_in_blank" # dien vao cho trong
+    REARRANGE = "rearrange" # sap xep lai cau

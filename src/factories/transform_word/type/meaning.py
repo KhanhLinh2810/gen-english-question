@@ -8,10 +8,12 @@ import random
 from src.factories.transform_word.type.base import Word
 
 class Meaning(Word):
+    # need update nhận thêm câu để tạo từ incorrect cho hợp lý, ví dụ: correct là cat, câu là "The cat is in house", incorrect là dog thì không có ý nghĩa, incorrect nên là a train 
+    
     def transform_word(self, word: str) -> Optional[str]:
         """
             Transform a word to another with a different meaning (e.g., homophone or unrelated word).
-            """
+        """
         # Find a word with different meaning but the same POS
         synsets = wn.synsets(word)
         if not synsets:
