@@ -1,8 +1,8 @@
 from typing import List, Optional
 import random
 
-from src.enum.question import QuestionTypeEnum
-from src.enum.word import TransformWordType
+from src.enum import QuestionTypeEnum
+from src.enum import TransformWordType
 from src.factories.gen_question.types.base import Question, nltk_words
 from src.factories.transform_word.factory import transform_word_instance
 from src.services.AI.sentence_generator import SentenceGeneratorModel

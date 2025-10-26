@@ -37,6 +37,6 @@ class QuestionGenerator(Model):
         Returns:
            str: generated question.
         """
-        return postprocess_question(super().inference(
+        return postprocess_question(self().inference(
             num_beams=5, no_repeat_ngram_size=2, model_max_length=72,
             token_max_length=382, context=context, answer=answer))

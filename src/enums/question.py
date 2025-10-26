@@ -8,3 +8,7 @@ class QuestionTypeEnum(str, Enum):
     INCORRECT_WORD = "incorrect_word"
     FILL_IN_BLANK = "fill_in_blank" # dien vao cho trong
     REARRANGE = "rearrange" # sap xep lai cau
+
+class ChoiceTypeEnum(str, Enum):
+    SINGLE_CHOICE = "single-choice"
+    MULTIPLE_CHOICE = "multiple-choice"

@@ -1,5 +1,6 @@
 import nltk
 nltk.download('wordnet')
+import random
 from nltk.corpus import wordnet as wn
 from typing import Optional
 

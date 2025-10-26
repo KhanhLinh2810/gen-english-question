@@ -1,4 +1,4 @@
-from src.enum.question import QuestionTypeEnum
+from enums.question import QuestionTypeEnum
 from src.factories.gen_question.types.antonym_question import AntonymsQuestion
 from src.factories.gen_question.types.incorrect_word_question import IncorrectWordQuestion
 from src.factories.gen_question.types.stress_question import StressQuestion
