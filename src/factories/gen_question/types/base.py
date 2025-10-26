@@ -9,7 +9,8 @@ from nltk.corpus import words
 
 nltk_words = words.words()
 
-class Question(ABC):
+
+class Question(ABC):        
     @abstractmethod
     def generate_questions(self, list_words: Set[str], num_questions: int = 1, num_ans_per_question: int = 4):
         pass

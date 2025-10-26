@@ -1,7 +1,7 @@
 # import random
 # from typing import Set, List
 # from src.factories.gen_question.base import Question
-# from src.enum.question import QuestionTypeEnum
+# from src.enums.question import QuestionTypeEnum
 # from collections import defaultdict
 # import pronouncing
 #

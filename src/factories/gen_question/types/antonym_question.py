@@ -2,7 +2,7 @@ from typing import List
 import random
 
 from src.factories.gen_question.types.base import Question, nltk_words
-from enums.question import QuestionTypeEnum
+from src.enums import QuestionTypeEnum
 
 
 class AntonymsQuestion(Question):

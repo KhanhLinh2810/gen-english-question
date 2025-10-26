@@ -1,4 +1,4 @@
-from src.enum.word import TransformWordType
+from src.enums.word import TransformWordType
 from src.factories.transform_word.type.article import Article
 from src.factories.transform_word.type.meaning import Meaning
 from src.factories.transform_word.type.part_of_speech import PartOfSpeech

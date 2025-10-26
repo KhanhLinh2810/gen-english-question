@@ -1,7 +1,7 @@
 from typing import List, Optional
 import random
 
-from enums.question import QuestionTypeEnum
+from src.enums import QuestionTypeEnum
 from src.enums.word import TransformWordType
 from src.factories.gen_question.types.base import Question, nltk_words
 from src.factories.transform_word.factory import transform_word_instance

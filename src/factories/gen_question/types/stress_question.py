@@ -3,7 +3,7 @@ from collections import defaultdict
 import random
 
 from src.factories.gen_question.types.base import Question, nltk_words
-from enums.question import QuestionTypeEnum
+from src.enums import QuestionTypeEnum
 from src.utils.number import rand_exclude
 from src.utils.word import get_stress_pattern, convert_word_to_ipa
 

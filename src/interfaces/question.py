@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 
-from enums.question import QuestionTypeEnum
+from src.enums import QuestionTypeEnum
 
 
 class ModelInput(BaseModel):
