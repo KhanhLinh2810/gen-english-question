@@ -25,7 +25,7 @@ async def generate_question(body: ICreateQuestion):
     return JSONResponse(status_code=200, content=res_ok(list_questions))
 
 @route.post('/sentence')
-async def generate_questions_from_sentence(bßody: ICQuestion, request: Request):
+async def generate_questions_from_sentence(body: ICQuestion, request: Request):
     """Process user request
 
     Args:

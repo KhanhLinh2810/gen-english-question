@@ -1,1 +1,3 @@
 from .incorrect_question import GEN_INCORRECT_WORD_QUESTION_PROMPT
+from .fill_in_blank import GEN_FILL_IN_BLANK_QUESTION_PROMPT
+from .natural_sentence import GEN_NATURAL_SENTENCE_PROMPT

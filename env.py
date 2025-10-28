@@ -21,5 +21,8 @@ config = {
         "expired_in": int(os.getenv("JWT_EXPIRATION_DELTA")) | 24, # hour
         "algorithm": os.getenv("JWT_ALGORITHM"),
         "secret_key": os.getenv("JWT_SECRET"),
+    },
+    "google": {
+        "api_key": os.getenv("GOOGLE_API_KEY"),
     }
 }

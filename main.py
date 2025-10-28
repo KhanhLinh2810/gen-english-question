@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException
 
+
 from src.routers.public.public import router
 from src.utils.response import handler_error
     

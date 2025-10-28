@@ -1,30 +1,22 @@
 from typing import List, Optional
 import random
 
-from src.enum import QuestionTypeEnum
-from src.enum import TransformWordType
-from src.factories.gen_question.types.base import Question, nltk_words
-from src.factories.transform_word.factory import transform_word_instance
-from src.services.AI.sentence_generator import SentenceGeneratorModel
-
+from src.enums import ChoiceTypeEnum, QuestionTypeEnum
+from src.factories.gen_question.types.base import Question
+from src.llms.models import GeminiLLM
+from src.llms.tools import GEN_INCORRECT_WORD_QUESTION_TOOL
+from src.llms.prompts import GEN_INCORRECT_WORD_QUESTION_PROMPT
 
 class IncorrectWordQuestion(Question):
-    """
-    This class generates multiple-choice questions that ask the user
-    to find the incorrect word in a sentence.
-
-    It selects a word from the list, generates a sentence using a simple pattern,
-    and injects a grammatically incorrect word into the sentence.
-    """
-
+    def __init__(self):
+        self.llm = GeminiLLM()
+    
     def generate_questions(self, list_words: List[str], num_question: int = 1, num_ans_per_question: int = 4):
         if list_words is None:
             list_words = []
 
         result = []
         list_unique_words = set(list_words)
-
-        sentence_generator = SentenceGeneratorModel()
 
         def choice_word_to_gen_sentence():
             number_choice_word = random.randint(1, 4)
@@ -34,55 +26,50 @@ class IncorrectWordQuestion(Question):
                 choice_word = random.sample(available_words, number_choice_word)
                 for w in choice_word:
                     list_unique_words.remove(w)
-            else:
-                # Lấy tất cả từ còn lại và thêm từ nltk_words
-                choice_word = available_words.copy()
-                remaining = number_choice_word - len(choice_word)
-                additional_words = random.sample(nltk_words, remaining)
-                choice_word += additional_words
-                list_unique_words.clear()
+                return choice_word
 
-            return choice_word
+            return []
 
         for _ in range(num_question):
-            list_choice_word = choice_word_to_gen_sentence()
+            list_choice_words = choice_word_to_gen_sentence()
 
-            # 1. Generate a simple sentence using a template
-            sentence = sentence_generator.generate_sentence_from_words(list_choice_word, )
-            # 2. Randomly choose a word to make incorrect in sequence
-            sentence_words = sentence.strip(".").split()
-            correct_word = random.sample(list(set(sentence_words)), 1)[0]
-            sentence_words.remove(correct_word)
+            prompt = GEN_INCORRECT_WORD_QUESTION_PROMPT
+            _tools = [GEN_INCORRECT_WORD_QUESTION_TOOL]
+            raw_output = self.llm.generate_response(
+                 messages=[
+                    {
+                        "role": "system",
+                        "content": prompt
+                    }, 
+                    {
+                        "role": "user",
+                        "content": f"List of words: {', '.join(list_choice_words)}, Type of question: {ChoiceTypeEnum.SINGLE_CHOICE.value}, Number of answer choices: {num_ans_per_question}"
+                    }
+                ],
+                tools=_tools,
+            )
+            
+            if "tool_calls" in raw_output and raw_output["tool_calls"]:
+                for call in raw_output["tool_calls"]:
+                    if call.get("name") == "gen_find_error_question":
+                        data = call.get("arguments", {})
+                        result.append({
+                            "question": data.get("question"),
+                            "type": QuestionTypeEnum.INCORRECT_WORD,
+                            "choices": data.get("choices", []),
+                            "answer": data.get("answer"),
+                            "explanation": data.get("explanation"),
+                            "tags": data.get("tags", []),
+                        })
 
-            # 3. Replace it with a grammatically incorrect word
-            incorrect_word = self.create_incorrect_word(correct_word)
-            modified_sentence = sentence.replace(correct_word, incorrect_word, 1)
 
-            # 4. Create choices (including incorrect_word and distractors)
-            choices = random.sample(list(set(sentence_words)), num_ans_per_question -1) + incorrect_word
-
-            random.shuffle(choices)
-            result.append({
-                "question": modified_sentence,
-                "type": QuestionTypeEnum.INCORRECT_WORD,
-                "choices": choices,
-                "answer": choices.index(incorrect_word),
-                "explain": ["Correct: {sequence}"],
-            })
+            # random.shuffle(choices)
+            # result.append({
+            #     "question": modified_sentence,
+            #     "type": QuestionTypeEnum.INCORRECT_WORD,
+            #     "choices": choices,
+            #     "answer": choices.index(incorrect_word),
+            #     "explain": ["Correct: {sequence}"],
+            # })
 
         return result
-
-    @staticmethod
-    def create_incorrect_word(word: str) -> Optional[str]:
-        list_transform_type = list(TransformWordType)
-        random.shuffle(list_transform_type)
-        for t in list_transform_type:
-            transformer = transform_word_instance(t)
-            incorrect_word = transformer.transform_word(word)
-            if incorrect_word is not None and incorrect_word != word:
-                return incorrect_word
-
-        try:
-            return random.choice(nltk_words) if nltk_words else None
-        except ImportError:
-            return None
