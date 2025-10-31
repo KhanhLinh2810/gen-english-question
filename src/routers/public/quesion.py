@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from src.factories.gen_question.factory import create_question_instance
 from src.utils.response import res_ok
 from src.utils.text_process import vietnamese_to_english, english_to_vietnamese, get_all_summary, get_all_questions
-from src.interfaces.question import ModelInput, ICQuestion, ICreateQuestion
+from src.interfaces.question import ModelInput, ICreateQuestion, ICreateQuestionForParagraph
 from src.services.AI.abstractive_summarizer import AbstractiveSummarizer
 from src.services.AI.question_generator import QuestionGenerator    
 from src.services.AI.false_ans_generator import FalseAnswerGenerator
@@ -21,37 +21,10 @@ async def generate_question(body: ICreateQuestion):
         num_question=body.num_question,
         num_ans_per_question=body.num_ans_per_question,
     )
-    print(list_questions)
     return JSONResponse(status_code=200, content=res_ok(list_questions))
 
 @route.post('/sentence')
-async def generate_questions_from_sentence(body: ICQuestion, request: Request):
-    """Process user request
-
-    Args:
-        request (ModelInput): request model
-        bg_task (BackgroundTasks): run process_request() on other thread
-        and respond to request
-
-    Returns:
-        dict(str: int): response
-    """
-    # bg_task.add_task(process_request, request)
-
-
-    # # Tạo một dictionary để lưu trữ kết quả
-    # results = []
-
-    # def background_task():
-    #     nonlocal results
-    #     results = process_request(request)
-
-    # # Thêm tác vụ nền để xử lý yêu cầu
-    # bg_task.add_task(background_task)
-
-
-    # Thực hiện xử lý yêu cầu và lưu kết quả vào Firestore
-    # Không dùng background vì để nó chạy trong cùng 1 thread để chờ xử lí xong mới có results
+async def generate_questions_from_sentence(body: ICreateQuestionForParagraph, request: Request):
     new_questions = []
     error_sentences = []
     model_input = ModelInput(**body.model_dump(), user_id=None)

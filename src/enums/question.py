@@ -12,3 +12,11 @@ class QuestionTypeEnum(str, Enum):
 class ChoiceTypeEnum(str, Enum):
     SINGLE_CHOICE = "single-choice"
     MULTIPLE_CHOICE = "multiple-choice"
+
+class ParagraphQuestionTypeEnum(str, Enum):
+    FACT = "fact"
+    MAIN_IDEA = "main_idea"
+    VOCAB = "vocab"
+    INFERENCE = "inference"
+    PURPOSE = "purpose"
+    

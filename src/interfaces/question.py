@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional, List, Text
 
-from src.enums import QuestionTypeEnum
+from src.enums import QuestionTypeEnum, ParagraphQuestionTypeEnum
 
 
 class ModelInput(BaseModel):
@@ -9,13 +9,19 @@ class ModelInput(BaseModel):
     user_id: Optional[str] = None
     context: str
     name: str
+    
+class IQuestionConfig(BaseModel):
+    question_type: QuestionTypeEnum
+    list_words: List[str]
+    num_question: int = Field(..., ge=1, le=5)
 
-class ICQuestion(BaseModel):
-    context: str
-    name: str
+class ICreateQuestionForParagraph(BaseModel):
+    description: Text
+    num_ans_per_question: int = Field(..., ge=2, le=6)
+    list_create_question: List[IQuestionConfig]
 
 class ICreateQuestion(BaseModel):
-    question_type: QuestionTypeEnum
+    question_type: ParagraphQuestionTypeEnum
     list_words: List[str]
     num_ans_per_question: int = Field(..., ge=2, le=10)
     num_question: int = Field(..., ge=1, le=10)
