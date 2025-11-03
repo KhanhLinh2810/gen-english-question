@@ -14,6 +14,8 @@ from env import config
 
 
 class GeminiLLM(LLMBase):
+    #  co the thu dung connection pool voi ket noi nay de cai thien hieu nang
+    
     _instance = None
     _lock = threading.Lock()
 

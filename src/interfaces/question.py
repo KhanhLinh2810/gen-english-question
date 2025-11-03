@@ -11,8 +11,7 @@ class ModelInput(BaseModel):
     name: str
     
 class IQuestionConfig(BaseModel):
-    question_type: QuestionTypeEnum
-    list_words: List[str]
+    question_type: ParagraphQuestionTypeEnum
     num_question: int = Field(..., ge=1, le=5)
 
 class ICreateQuestionForParagraph(BaseModel):
@@ -21,7 +20,7 @@ class ICreateQuestionForParagraph(BaseModel):
     list_create_question: List[IQuestionConfig]
 
 class ICreateQuestion(BaseModel):
-    question_type: ParagraphQuestionTypeEnum
+    question_type: QuestionTypeEnum
     list_words: List[str]
     num_ans_per_question: int = Field(..., ge=2, le=10)
     num_question: int = Field(..., ge=1, le=10)

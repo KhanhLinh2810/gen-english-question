@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from src.factories.gen_question.factory import create_question_instance
+from src.factories.gen_question_for_paragraph.factory import create_question_paragraph_instance
 from src.utils.response import res_ok
 from src.utils.text_process import vietnamese_to_english, english_to_vietnamese, get_all_summary, get_all_questions
 from src.interfaces.question import ModelInput, ICreateQuestion, ICreateQuestionForParagraph
@@ -26,20 +27,22 @@ async def generate_question(body: ICreateQuestion):
 @route.post('/sentence')
 async def generate_questions_from_sentence(body: ICreateQuestionForParagraph, request: Request):
     new_questions = []
-    error_sentences = []
-    model_input = ModelInput(**body.model_dump(), user_id=None)
-    try:
-        new_questions =  generate_and_store_questions(model_input)
-    except Exception as e:
-        # Không để là model_input.context mà là request.context vì model_input.context là tiếng Anh
-        print(f"Lỗi khi xử lí câu: {body.context}. Lỗi: {e}")
-        error_sentences.append({'sentence': body.context, 'error': str(e)})
+    # error_sentences = []
+    # model_input = ModelInput(**body.model_dump(), user_id=None)
+    # try:
+    #     new_questions =  generate_and_store_questions(model_input)
+    # except Exception as e:
+    #     # Không để là model_input.context mà là request.context vì model_input.context là tiếng Anh
+    #     print(f"Lỗi khi xử lí câu: {body.context}. Lỗi: {e}")
+    #     error_sentences.append({'sentence': body.context, 'error': str(e)})
 
-    result = {
-        "success": new_questions,
-        "fail": error_sentences
-    }
-    return JSONResponse(status_code=200, content=res_ok(result))
+    # result = {
+    #     "success": new_questions,
+    #     "fail": error_sentences
+    # }
+    question = create_question_paragraph_instance()
+    list_questions = question.generate_questions(data=body)
+    return JSONResponse(status_code=200, content=res_ok(list_questions))
 
 async def generate_and_store_questions(self, request):
         """Generate questions from user request and store results in Firestore.

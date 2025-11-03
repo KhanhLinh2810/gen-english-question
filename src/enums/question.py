@@ -14,9 +14,9 @@ class ChoiceTypeEnum(str, Enum):
     MULTIPLE_CHOICE = "multiple-choice"
 
 class ParagraphQuestionTypeEnum(str, Enum):
-    FACT = "fact"
-    MAIN_IDEA = "main_idea"
-    VOCAB = "vocab"
-    INFERENCE = "inference"
-    PURPOSE = "purpose"
+    FACT = "paragraph_fact"
+    MAIN_IDEA = "paragraph_main_idea"
+    VOCAB = "paragraph_vocab"
+    INFERENCE = "paragraph_inference"
+    PURPOSE = "paragraph_purpose"
     
