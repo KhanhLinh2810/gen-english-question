@@ -1,7 +1,7 @@
 from env import config
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-
+print(config)
 database_url = f"mysql+aiomysql://{config['db']['user']}:{config['db']['password']}@{config['db']['host']}:{config['db']['port']}/{config['db']['database']}"
 engine = create_async_engine(
     database_url,
