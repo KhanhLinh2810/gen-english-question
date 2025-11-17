@@ -2,14 +2,17 @@ from typing import List
 from collections import defaultdict
 import random
 
-from src.factories.gen_question.types.base import Question, nltk_words
+from src.factories.gen_question.types.base import Question
 from src.enums import QuestionTypeEnum
 from src.utils.number import rand_exclude
 from src.utils.word import get_stress_pattern, convert_word_to_ipa
+from src.loaders.elastic import Elastic
 
 
 class StressQuestion(Question):
-    def generate_questions(self, list_words: List[str] = None, num_question: int = 1, num_ans_per_question: int = 4):
+    INDEX = 'phonetic'
+
+    def generate_questions(self, list_words: List[str] = None, num_question: int = 1, num_ans_per_question: int = 4, cefr: int = 3):
         if list_words is None:
             list_words = []
 
@@ -20,11 +23,22 @@ class StressQuestion(Question):
 
         stress_groups = defaultdict(list)
         for word in list_words:
-            stress = get_stress_pattern(word)
-            ipa = convert_word_to_ipa(word)
-            if ipa is None or stress is None:
-                continue
-            stress_groups[stress].append({"word": word, "ipa": ipa})
+            list_doc = self.get_list_word(index=self.INDEX,
+                query = {
+                "bool": {
+                    "must": {
+                        "term": {"word.keyword": word}
+                    }
+            }})
+
+
+            for doc in list_doc:
+                if "stress" not in doc or "ipa" not in doc:
+                    continue
+                stress_groups[doc["stress"]].append({
+                    "word": word, 
+                    "ipa": doc["ipa"]
+                })
 
         # create
         def choice_random_words_in_stress_group(stress_group_key: int):
@@ -88,20 +102,41 @@ class StressQuestion(Question):
 
         return result
 
-    @staticmethod
-    def get_random_word_and_ipa_by_stress(stress: int):
-        max_attempts = 10000
-        attempts = 0
-        while attempts < max_attempts:
-            if not nltk_words:
-                return None
-            word = random.choice(nltk_words)
-            word_ipa = convert_word_to_ipa(word)
-            word_stress = get_stress_pattern(word)
-            if word_ipa is None or word_stress is None:
-                attempts += 1
-                continue
-            if word_stress == stress:
-                return word, word_ipa
-            attempts += 1
-        return None  # Return None if no word is found
+    def get_random_word_and_ipa_by_stress(self, stress: int, cefr: int = None):
+        es = Elastic()
+
+        must = [
+            {"term": {"stress": stress}},
+            {"exists": {"field": "ipa"}},
+            {"exists": {"field": "word"}}
+        ]
+        if cefr is not None:
+            must.append({
+                "range": {
+                    "cefr": {"gte": cefr - 1, "lte": cefr + 1}
+                }
+            })
+        query = {
+            "bool": {"must": must}
+        }
+
+        total_doc = es.count(index=self.INDEX, query=query)["count"]
+        if total_doc == 0:
+            return None
+
+        offset = random.randint(0, total_doc - 1)
+        resp = es.search(
+            index=self.INDEX,
+            query=query,
+            size=1,
+            from_=offset
+        )
+        hits = resp["hits"]["hits"]
+
+        if hits:        
+            doc = hits[0]["_source"] 
+            if "word" in doc and "ipa" in doc:
+                return doc["word"], doc["ipa"]
+            
+        return None
+
