@@ -3,64 +3,64 @@ import random
 
 from src.factories.gen_question.types.base import Question, nltk_words
 from src.enums import QuestionTypeEnum
+from src.loaders.elastic import Elastic
 
 
 class SynonymsQuestion(Question):
-    """
-    This class generates multiple-choice questions that ask the user
-    to select a synonym for a given word.
+    INDEX = "vocabulary"
 
-    It uses dictionary data (from fetch_word_data) to retrieve
-    meanings and synonyms. If the input list is empty or invalid,
-    it falls back to randomly chosen words from a built-in word list (nltk_words).
-    """
+    def generate_questions(self, list_words: List[str] = None, num_question: int = 1,
+                           num_ans_per_question: int = 4, cefr: int = 3):
 
-    def generate_questions(self, list_words: List[str] = None, num_question: int = 1, num_ans_per_question: int = 4):
-        if list_words is None:
-            list_words = []
-
-        result = []
+        list_words = list_words or []
         list_unique_words = set(list_words)
 
-        # Internal helper function to get a valid question/answer pair
-        def get_question_and_answer():
-            """
-            Randomly selects a word and finds one of its synonyms.
-
-            Returns:
-                tuple(str, str): question_word, synonym_answer
-            """
-            # Try from provided list word
-            while list_unique_words:
-                source_word = random.sample(list(list_unique_words), 1)[0]
-                list_unique_words.remove(source_word)
-                synonym_word = self.get_synonym(source_word)
-                if synonym_word in list_unique_words:
-                    list_unique_words.remove(source_word)
-                if synonym_word:
-                    return source_word, synonym_word
-
-            # Fallback: use nltk_words
-            while True:
-                source_word = random.choice(nltk_words)
-                synonym_word = self.get_synonym(source_word)
-                if synonym_word:
-                    return source_word, synonym_word
+        result = []
+        used_words = set()
+        used_choices = set()
 
         for _ in range(num_question):
-            question_word, correct_answer = get_question_and_answer()
+            max_loop = 100
+            question_word, correct_answer, synonym_set = \
+                self._pick_question_word(list_unique_words, used_words, cefr)
+
+            pos = self.get_pos({
+                "bool": {
+                    "must": [
+                        {"term": {"word.keyword": question_word.lower()}},
+                        {"term": {"synonyms.keyword": correct_answer.lower()}}
+                    ]
+                }
+            })
+            used_words.update([question_word, correct_answer])
 
             choices = [correct_answer]
-            distractor_set = set()
 
-            while len(choices) < num_ans_per_question:
-                distractor_word = random.choice(nltk_words)
+            while len(choices) < num_ans_per_question and max_loop > 0:
+                doc = self.get_random(self.INDEX, None, cefr=cefr, pos=pos)
+                if not doc:
+                    continue
 
-                if (distractor_word.lower() != correct_answer.lower() and
-                    distractor_word.lower() != question_word.lower() and
-                    distractor_word.lower() not in distractor_set):
-                    distractor_set.add(distractor_word)
-                    choices.append(distractor_word)
+                candidate = doc["word"]
+
+                # Loại trừ điều kiện chung
+                if (
+                    candidate in used_choices or
+                    candidate in used_words or
+                    candidate in synonym_set or
+                    candidate == question_word or
+                    candidate == correct_answer
+                ):
+                    continue
+
+                # Loại distractor có nghĩa trùng với đáp án
+                syns = set(self.get_list_synonym(candidate))
+                if correct_answer in syns:
+                    continue
+
+                choices.append(candidate)
+                used_choices.add(candidate)
+                max_loop -= 1
 
             random.shuffle(choices)
 
@@ -69,45 +69,68 @@ class SynonymsQuestion(Question):
                 "type": QuestionTypeEnum.SYNONYM,
                 "choices": choices,
                 "answer": choices.index(correct_answer),
-                "explain": [],
+                "explain": []
             })
 
         return result
+    
+    # -----------------------------------------------------
+    # Lấy tất cả synonym của 1 từ từ ES (nhiều nghĩa)
+    # -----------------------------------------------------
+    def get_list_synonym(self, word: str):
+        es = Elastic()
+        query = {"term": {"word.keyword": word.lower()}}
+        resp = es.search(index=self.INDEX, query=query, size=1000)
 
-    def get_synonym(self, word: str):
+        hits = resp["hits"]["hits"]
+        if not hits:
+            return []
+
+        synonyms = set()
+        for h in hits:
+            s = h["_source"].get("synonyms", [])
+            synonyms.update(s)
+
+        return list(synonyms)
+    
+    # -----------------------------------------------------
+    # Lấy 1 từ làm câu hỏi và 1 synonym làm đáp án
+    # -----------------------------------------------------
+    def _pick_question_word(self, list_unique_words, used_words, cefr):
         """
-        Retrieves a random synonym for the given word using dictionary API data.
-
-        It checks both the 'meanings.synonyms' and 'meanings.definitions.synonyms' fields.
-
-        Args:
-            word (str): The input word to find a synonym for.
-
-        Returns:
-            str or None: A synonym if found, else None.
+        - Ưu tiên lấy từ danh sách đầu vào
+        - Nếu hết → lấy từ ES random theo CEFR
         """
-        data = self.fetch_word_data(word)
-        if not data:
-            return None
 
-        meanings = data.get("meanings", [])
+        # ƯU TIÊN INPUT LIST
+        while list_unique_words:
+            source = list_unique_words.pop()
 
-        # Randomly search for synonyms in the meaning entries
-        while meanings:
-            meaning = random.sample(meanings, 1)[0]
+            if source in used_words:
+                continue
 
-            # Try top-level synonyms
-            synonyms = meaning.get("synonyms", [])
+            syns = self.get_list_synonym(source)
+            valid_syns = [s for s in syns if s not in used_words]
+            if not valid_syns:
+                continue
 
-            # Also check synonyms inside definitions
-            if not synonyms:
-                definitions = meaning.get("definitions", [])
-                for definition in definitions:
-                    synonyms.extend(definition.get("synonyms", []))
+            correct = random.choice(valid_syns)
+            return source, correct, set(syns)
 
-            if synonyms:
-                return random.choice(synonyms)
+        # FALLBACK ES
+        while True:
+            doc = self.get_random(self.INDEX, None, cefr=cefr)
+            if not doc:
+                continue
 
-            meanings.remove(meaning)
+            source = doc["word"]
 
-        return None
+            if source in used_words:
+                continue
+
+            syns = self.get_list_synonym(source)
+            valid_syns = [s for s in syns if s not in used_words]
+            if not valid_syns:
+                continue
+
+            return source, random.choice(valid_syns), set(syns)

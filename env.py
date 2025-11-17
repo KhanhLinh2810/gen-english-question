@@ -24,5 +24,9 @@ config = {
     },
     "google": {
         "api_key": os.getenv("GOOGLE_API_KEY"),
+    },
+    "elastic": {
+        "url": os.getenv("ELASTIC_URL"),
+        "api_key": os.getenv("ELASTIC_API_KEY")
     }
 }
