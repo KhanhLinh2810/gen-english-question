@@ -49,14 +49,26 @@ class RearrangenQuestion(Question):
                 ],
             )
 
+            choices = [{
+                "content": sentence,
+                "is_correct": True
+            }]
             words = sentence.split()
             shuffled_words = words[:]
             random.shuffle(shuffled_words)
+            question = " / ".join(shuffled_words)
+            
+            for i in range(num_ans_per_question-1):
+                random.shuffle(shuffled_words)
+                choices.append({
+                    "content": " / ".join(shuffled_words),
+                    "is_correct": False
+                })
 
             result.append({
-                "question": " / ".join(shuffled_words), 
+                "content": question, 
                 "type": QuestionTypeEnum.REARRANGE,
-                "answer": sentence
+                "choices": choices
             })
             
         return result

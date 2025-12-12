@@ -93,7 +93,7 @@ class StressQuestion(Question):
             if len(choices) == num_ans_per_question:
                 random.shuffle(choices)
                 result.append({
-                    "question": "",
+                    "content": "",
                     "type": QuestionTypeEnum.STRESS,
                     "choices": choices,
                     "answer": choices.index(different_word),

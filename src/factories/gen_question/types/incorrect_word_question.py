@@ -53,11 +53,21 @@ class IncorrectWordQuestion(Question):
                 for call in raw_output["tool_calls"]:
                     if call.get("name") == "gen_find_error_question":
                         data = call.get("arguments", {})
+                        raw_choices = data.get("choices", [])
+                        answer = data.get("answer")
+                        if not raw_choices or not answer or answer not in raw_choices:
+                            continue
+                        choices = []
+                        for c in raw_choices:
+                            choices.append({
+                                "content": c,
+                                "is_correct": c == answer
+                            })
+
                         result.append({
-                            "question": data.get("question"),
+                            "content": data.get("question"),
                             "type": QuestionTypeEnum.INCORRECT_WORD,
-                            "choices": data.get("choices", []),
-                            "answer": data.get("answer"),
+                            "choices": choices, 
                             "explanation": data.get("explanation"),
                             "tags": data.get("tags", []),
                         })

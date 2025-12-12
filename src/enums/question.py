@@ -8,6 +8,12 @@ class QuestionTypeEnum(str, Enum):
     INCORRECT_WORD = "incorrect_word"
     FILL_IN_BLANK = "fill_in_blank" # dien vao cho trong
     REARRANGE = "rearrange" # sap xep lai cau
+    
+    FACT = "paragraph_fact"
+    MAIN_IDEA = "paragraph_main_idea"
+    VOCAB = "paragraph_vocab"
+    INFERENCE = "paragraph_inference"
+    PURPOSE = "paragraph_purpose"
 
 class ChoiceTypeEnum(str, Enum):
     SINGLE_CHOICE = "single-choice"

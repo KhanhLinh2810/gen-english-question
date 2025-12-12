@@ -64,12 +64,17 @@ class SynonymsQuestion(Question):
 
             random.shuffle(choices)
 
+            final_choices = []
+            for c in choices:
+                final_choices.append({
+                    "content": c,
+                    "is_correct": c == correct_answer
+                })
+
             result.append({
-                "question": question_word,
+                "content": question_word,
                 "type": QuestionTypeEnum.SYNONYM,
-                "choices": choices,
-                "answer": choices.index(correct_answer),
-                "explain": []
+                "choices": final_choices,
             })
 
         return result
