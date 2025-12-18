@@ -5,11 +5,17 @@ from src.factories.gen_question.types.base import Question, nltk_words
 from src.enums import QuestionTypeEnum
 
 from src.loaders.elastic import Elastic
+from src.services.AI.false_ans_generator import FalseAnswerGenerator
 
 
 
 class AntonymsQuestion(Question):
     INDEX = "vocabulary"
+    false_ans_gen: FalseAnswerGenerator = None
+
+    def __init__(self):
+        if self.false_ans_gen is None:
+            self.false_ans_gen = FalseAnswerGenerator()
 
     def generate_questions(self, list_words: List[str] = None, num_question: int = 1,
                            num_ans_per_question: int = 4, cefr: int = 3):
@@ -22,48 +28,55 @@ class AntonymsQuestion(Question):
         used_choices = set()
 
         for _ in range(num_question):
-            max_loop = 100
-            question_word, correct_answer, antonym_set = \
+            question_word, correct_answer = \
                 self._pick_question_word(list_unique_words, used_words, cefr)
-
-            pos = self.get_pos({
-                "bool": {
-                    "must": [
-                        {"term": {"word.keyword": question_word.lower()}},
-                        {"term": {"antonyms.keyword": correct_answer.lower()}}
-                    ]
-                }
-            })
-            used_words.update([question_word, correct_answer])
+            
+            # max_loop = 100
+            # pos = self.get_pos({
+            #     "bool": {
+            #         "must": [
+            #             {"term": {"word.keyword": question_word.lower()}},
+            #             {"term": {"antonyms.keyword": correct_answer.lower()}}
+            #         ]
+            #     }
+            # })
+            # used_words.update([question_word, correct_answer])
 
             choices = [correct_answer]
 
-            while len(choices) < num_ans_per_question and max_loop > 0:
-                doc = self.get_random(self.INDEX, None, cefr=cefr, pos=pos)
-                if not doc:
-                    continue
+            # while len(choices) < num_ans_per_question and max_loop > 0:
+            #     doc = self.get_random(self.INDEX, None, cefr=cefr, pos=pos)
+            #     if not doc:
+            #         continue
 
-                candidate = doc["word"]
+            #     candidate = doc["word"]
 
-                # Loại trừ điều kiện chung
-                if (
-                    candidate in used_choices or
-                    candidate in used_words or
-                    candidate in antonym_set or
-                    candidate == question_word or
-                    candidate == correct_answer
-                ):
-                    continue
+            #     # Loại trừ điều kiện chung
+            #     if (
+            #         candidate in used_choices or
+            #         candidate in used_words or
+            #         candidate in antonym_set or
+            #         candidate == question_word or
+            #         candidate == correct_answer
+            #     ):
+            #         continue
 
-                # Loại distractor có nghĩa trùng với đáp án
-                syns = set(self.get_list_antonym(candidate))
-                if correct_answer in syns:
-                    continue
+            #     # Loại distractor có nghĩa trùng với đáp án
+            #     syns = set(self.get_list_antonym(candidate))
+            #     if correct_answer in syns:
+            #         continue
 
-                choices.append(candidate)
-                used_choices.add(candidate)
-                max_loop -= 1
+            #     choices.append(candidate)
+            #     used_choices.add(candidate)
+            #     max_loop -= 1
 
+
+
+            distractors = self.false_ans_gen.generate_distractors_from_antonyms(
+                target_word=[correct_answer, question_word],
+                num_false_answers=num_ans_per_question - 1
+            )
+            choices.extend(distractors)
             random.shuffle(choices)
 
             final_choices = []
@@ -122,7 +135,7 @@ class AntonymsQuestion(Question):
                 continue
 
             correct = random.choice(valid_syns)
-            return source, correct, set(syns)
+            return source, correct
 
         # FALLBACK ES
         while True:
@@ -140,4 +153,4 @@ class AntonymsQuestion(Question):
             if not valid_syns:
                 continue
 
-            return source, random.choice(valid_syns), set(syns)
+            return source, random.choice(valid_syns)

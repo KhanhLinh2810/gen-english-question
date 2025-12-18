@@ -15,7 +15,7 @@ class IQuestionConfig(BaseModel):
     num_question: int = Field(..., ge=1, le=5)
 
 class ICreateQuestionForParagraph(BaseModel):
-    description: Text
+    paragraph: Text
     num_ans_per_question: int = Field(..., ge=2, le=6)
     list_create_question: List[IQuestionConfig]
 

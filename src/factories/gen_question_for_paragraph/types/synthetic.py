@@ -26,14 +26,13 @@ class ParagraphQuestion(Question):
             num = question_data.num_question
             type_to_total_count[qtype] = type_to_total_count.get(qtype, 0) + num
 
-        final_output = {}
         for qtype, total_count in type_to_total_count.items():
             prompt = type_to_prompt_map.get(qtype)
             if not prompt:
                 continue
 
             content_user = (
-                f"PARAGRAPH: {data.description}\n"
+                f"PARAGRAPH: {data.paragraph}\n"
                 f"QUESTION_COUNT: {total_count}\n"
                 f"OPTIONS_PER_QUESTION: {data.num_ans_per_question}\n"
             )
@@ -60,7 +59,7 @@ class ParagraphQuestion(Question):
 
             for question in data.get("list_questions", []):
                 result.append({
-                    "question": question.get("question"),
+                    "content": question.get("question"),
                     "type": qtype,
                     "choices": question.get("choices", []),
                     "answer": question.get("answer"),
