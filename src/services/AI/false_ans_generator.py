@@ -87,6 +87,12 @@ class FalseAnswerGenerator:
             tuple[list[str], list[str]]: sentence model embedding of answer and distractors.
         """
         return self._sentence_model.encode([answer]), self._sentence_model.encode(distractors)
+    
+    def get_embedding_list_word(self, word_list: list[str]):
+        """
+        Returns sentence model embedding of answer and distractors.
+        """
+        return self._sentence_model.encode([word_list])
 
     def filter_output(self, orig, dummies):
         """Filter out final answers.
@@ -273,7 +279,7 @@ class FalseAnswerGenerator:
         correct_words: list[str],
         num_distractors: int = 3,
         sim_min: float = 0.25,
-        sim_max: float = 0.75,
+        sim_max: float = 0.8,
         balance_threshold: float = 0.2
     ):
         """
