@@ -21,6 +21,7 @@ import tempfile
 class FalseAnswerGenerator:
     """Generate false answers within same context."""
 
+    _instance = None
     # def __init__(self):
     #     """Initialize false answer generation models."""
     #     self.__init_sentence_transformer()
@@ -32,7 +33,7 @@ class FalseAnswerGenerator:
             cls._instance._init_models()
         return cls._instance
     
-    def _init_model(self):
+    def _init_models(self):
         self.__init_sentence_transformer()
         self.__init_sense2vec()
 
