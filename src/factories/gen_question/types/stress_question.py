@@ -5,7 +5,6 @@ import random
 from src.factories.gen_question.types.base import Question
 from src.enums import QuestionTypeEnum
 from src.utils.number import rand_exclude
-from src.utils.word import get_stress_pattern, convert_word_to_ipa
 from src.loaders.elastic import Elastic
 
 

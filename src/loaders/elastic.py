@@ -1,7 +1,5 @@
 from elasticsearch import Elasticsearch
 from env import config
-import random
-
 
 class Elastic:
     _instance = None

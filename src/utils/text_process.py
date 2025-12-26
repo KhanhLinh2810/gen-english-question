@@ -4,10 +4,10 @@
 """
 
 import re
-from deep_translator import GoogleTranslator
-import nltk
-from nltk.tokenize import sent_tokenize
-nltk.download('punkt')
+# from deep_translator import GoogleTranslator
+# import nltk
+# from nltk.tokenize import sent_tokenize
+# nltk.download('punkt')
 
 
 
@@ -72,23 +72,23 @@ def change_format(false_ans):
         output.append(res)
     return output
 
-def postprocess_summary(text):
-    """Postprocess the output of summarizer model for fair readable output.
+# def postprocess_summary(text):
+#     """Postprocess the output of summarizer model for fair readable output.
 
-       Capitalize firt word of sentence. Put spaces in required place.
+#        Capitalize firt word of sentence. Put spaces in required place.
 
-    Args:
-        text (str): summarized text to processed.
+#     Args:
+#         text (str): summarized text to processed.
 
-    Returns:
-        str: clean-human readable text.
-    """
-    output = ""
+#     Returns:
+#         str: clean-human readable text.
+#     """
+#     output = ""
 
-    for token in sent_tokenize(text):
-        token = token.capitalize()
-        output += " " + token
-    return output
+#     for token in sent_tokenize(text):
+#         token = token.capitalize()
+#         output += " " + token
+#     return output
 
 
 def postprocess_question(text):
@@ -105,52 +105,52 @@ def postprocess_question(text):
     return output
 
 # Dịch vietnamese -> english
-def vietnamese_to_english(text):
-    translator = GoogleTranslator(source='vi', target='en')
-    translated_text = translator.translate(text)
-    return translated_text
+# def vietnamese_to_english(text):
+#     translator = GoogleTranslator(source='vi', target='en')
+#     translated_text = translator.translate(text)
+#     return translated_text
 
-def english_to_vietnamese(text):
-    translator = GoogleTranslator(source='en', target='vi')
-    translated_text = translator.translate(text)
-    return translated_text
-
-
-def get_all_summary(model, context):
-    """Generate summary of input corpus.
-
-    Args:
-        model (OnnxT5): T5 transformer for summarization.
-        context (str): Bunch of unprocessed text.
-
-    Returns:
-        tuple(list(str), list(str)): tuple of, list of summarized text chunks and list of
-        original text chuncks.
-    """
-    summary = []
-    splitted_text = model.preprocess_input(context)
-
-    for txt in splitted_text:
-        summary.append(model.summarize(txt))
-
-    return summary, splitted_text
+# def english_to_vietnamese(text):
+#     translator = GoogleTranslator(source='en', target='vi')
+#     translated_text = translator.translate(text)
+#     return translated_text
 
 
-def get_all_questions(model, context, answer):
-    """Return list of generated questions.
+# def get_all_summary(model, context):
+#     """Generate summary of input corpus.
 
-    Args:
-        model (OnnxT5): T5 transformer for question generation.
-        context (list(str)): list of context for generating questions.
-        answer (list(str)): list of answers for question which will be generated.
+#     Args:
+#         model (OnnxT5): T5 transformer for summarization.
+#         context (str): Bunch of unprocessed text.
 
-    Returns:
-        list(str): list of questions within given context
-    """
-    questions = []
+#     Returns:
+#         tuple(list(str), list(str)): tuple of, list of summarized text chunks and list of
+#         original text chuncks.
+#     """
+#     summary = []
+#     splitted_text = model.preprocess_input(context)
 
-    for cont, ans in zip(context, answer):
-        questions.append(model.generate(cont, ans))
+#     for txt in splitted_text:
+#         summary.append(model.summarize(txt))
 
-    # squeezing the 2d list to 1d
-    return questions
+#     return summary, splitted_text
+
+
+# def get_all_questions(model, context, answer):
+#     """Return list of generated questions.
+
+#     Args:
+#         model (OnnxT5): T5 transformer for question generation.
+#         context (list(str)): list of context for generating questions.
+#         answer (list(str)): list of answers for question which will be generated.
+
+#     Returns:
+#         list(str): list of questions within given context
+#     """
+#     questions = []
+
+#     for cont, ans in zip(context, answer):
+#         questions.append(model.generate(cont, ans))
+
+#     # squeezing the 2d list to 1d
+#     return questions

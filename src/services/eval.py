@@ -2,6 +2,8 @@ import math
 from typing import Any, Dict, List, Optional
 
 import spacy
+nlp = spacy.load("en_core_web_md")
+
 from loaders.elastic import Elastic
 from env import config
 import language_tool_python
@@ -20,7 +22,7 @@ class QuestionQualityEvaluator:
     def __init__(self, config: dict):
         self.config = config
         self._grammar_tool = language_tool_python.LanguageTool('en-US')
-        self.nlp = spacy.load("en_core_web_sm")
+        self.nlp = nlp
 
         # Cache các config để dễ đọc
         self.weights = config["evaluation"]["weights"]

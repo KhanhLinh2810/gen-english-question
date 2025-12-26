@@ -3,6 +3,8 @@ from fastapi import FastAPI, Request, HTTPException
 
 from src.routers.public.public import router
 from src.utils.response import handler_error
+from src.services.AI.false_ans_generator import FalseAnswerGenerator
+
     
 app = FastAPI()
 @app.exception_handler(Exception)
