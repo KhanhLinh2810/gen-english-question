@@ -4,10 +4,17 @@ from typing import Set, Optional
 import random
 
 from src.loaders.elastic import Elastic
+from src.llms.models import GeminiLLM, OpenAILLM
 
 
 
-class Question(ABC):        
+class Question(ABC):     
+    def __init__(self, model='gemini'):
+        if model == 'gemini':
+            self.llm = GeminiLLM()
+        else:
+            self.llm = OpenAILLM()
+
     @abstractmethod
     def generate_questions(self, list_words: Set[str], num_questions: int = 1, num_ans_per_question: int = 4):
         pass
@@ -89,6 +96,62 @@ class Question(ABC):
         hits = resp["hits"]["hits"]
 
         return [hit["_source"] for hit in hits] if hits else []
+    
+    # ---------------------------------------
+    # process raw data of tool call
+    # ---------------------------------------
+    def _parse_raw_tool_output(self, raw_output, name_function, type):
+        """
+        Parse tool_calls output from LLM and return validated questions.
+        """
+        results = []
+        # print(raw_output)
+
+        if "tool_calls" not in raw_output or not raw_output["tool_calls"]:
+            return results
+        
+
+        for call in raw_output["tool_calls"]:
+            print(name_function, call)
+
+            if call.get("name") != name_function:
+                continue
+
+            list_questions = call.get("arguments", {}).get("questions", [])
+            print(list_questions)
+            for q in list_questions:
+                raw_choices = q.get("choices", [])
+                list_answer = q.get("answer")
+
+                if not raw_choices or not list_answer:
+                    continue
+
+                choices = []
+                count_correct = 0
+
+                for c in raw_choices:
+                    is_correct = c in list_answer
+                    choices.append({
+                        "content": c,
+                        "is_correct": is_correct
+                    })
+                    if is_correct:
+                        count_correct += 1
+
+                # reject invalid cases
+                if count_correct == 0 or count_correct == len(choices):
+                    continue
+
+                results.append({
+                    "content": q.get("content"),
+                    "type": type,
+                    "choices": choices,
+                    "explanation": q.get("explanation"),
+                    "tags": q.get("tags", []),
+                })
+
+        return results
+
 
 
 

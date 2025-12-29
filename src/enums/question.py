@@ -1,28 +1,33 @@
 from enum import Enum
 
-class QuestionTypeEnum(str, Enum):
-    PRONUNCIATION = "pronunciation" # phien am
-    STRESS = "stress" # trong am
-    SYNONYM = "synonym" # tu dong nghia
-    ANTONYM = "antonym" # tu trai nghia
-    INCORRECT_WORD = "incorrect_word"
-    FILL_IN_BLANK = "fill_in_blank" # dien vao cho trong
-    REARRANGE = "rearrange" # sap xep lai cau
-    
-    FACT = "paragraph_fact"
-    MAIN_IDEA = "paragraph_main_idea"
-    VOCAB = "paragraph_vocab"
-    INFERENCE = "paragraph_inference"
-    PURPOSE = "paragraph_purpose"
+from enum import IntEnum
+
+class QuestionTypeEnum(IntEnum):
+    # Nhóm câu hỏi đơn lẻ
+    PRONUNCIATION = 1      # phien am
+    STRESS = 2             # trong am
+    SYNONYM = 3            # tu dong nghia
+    ANTONYM = 4            # tu trai nghia
+    INCORRECT_WORD = 5     
+    FILL_IN_BLANK = 6      # dien vao cho trong
+    REARRANGE = 7          # sap xep lai cau
+
+    # Nhóm câu hỏi đọc hiểu (Paragraph)
+    FACT = 21              
+    MAIN_IDEA = 22         
+    VOCAB = 23             
+    INFERENCE = 24         
+    PURPOSE = 25
 
 class ChoiceTypeEnum(str, Enum):
     SINGLE_CHOICE = "single-choice"
     MULTIPLE_CHOICE = "multiple-choice"
 
-class ParagraphQuestionTypeEnum(str, Enum):
-    FACT = "paragraph_fact"
-    MAIN_IDEA = "paragraph_main_idea"
-    VOCAB = "paragraph_vocab"
-    INFERENCE = "paragraph_inference"
-    PURPOSE = "paragraph_purpose"
+class ParagraphQuestionTypeEnum(IntEnum):
+    # Nhóm câu hỏi đọc hiểu (Paragraph)
+    FACT = 21              
+    MAIN_IDEA = 22         
+    VOCAB = 23             
+    INFERENCE = 24         
+    PURPOSE = 25
     

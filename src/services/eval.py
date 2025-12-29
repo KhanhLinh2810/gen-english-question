@@ -3,25 +3,26 @@ from typing import Any, Dict, List, Optional
 
 import spacy
 nlp = spacy.load("en_core_web_md")
-
-from loaders.elastic import Elastic
-from env import config
 import language_tool_python
+tool = language_tool_python.LanguageTool('en-US')
+
 import re
 from collections import defaultdict
 from sklearn.metrics.pairwise import cosine_similarity
 
-from services.AI.false_ans_generator import FalseAnswerGenerator
+from src.services.AI.false_ans_generator import FalseAnswerGenerator
 from src.interfaces.evaluation import GeneratedQuestion  
 from src.enums import QuestionTypeEnum
+from src.loaders.elastic import Elastic
+from env import config
+
 
 
 class QuestionQualityEvaluator:
     INDEX = "vocabulary"
 
-    def __init__(self, config: dict):
-        self.config = config
-        self._grammar_tool = language_tool_python.LanguageTool('en-US')
+    def __init__(self):
+        self._grammar_tool = tool
         self.nlp = nlp
 
         # Cache các config để dễ đọc
@@ -207,7 +208,7 @@ class QuestionQualityEvaluator:
 
         return round(final_score, 3), issues
 
-    def _check_grammar(self, text: str, max_errors: int = 2):
+    def _check_grammar(self, text: str, max_errors: int = 5):
         if not text or len(text.strip()) < 5:
             return 0, []
 

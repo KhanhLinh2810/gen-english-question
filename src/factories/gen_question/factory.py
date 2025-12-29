@@ -8,20 +8,20 @@ from src.factories.gen_question.types.rearrange import RearrangenQuestion
 from src.utils.exceptions import BadRequestException
 
 
-def create_question_instance(question_type: QuestionTypeEnum) :
-    if question_type == QuestionTypeEnum.PRONUNCIATION :
-        return StressQuestion()
-    elif question_type == QuestionTypeEnum.STRESS :
-        return StressQuestion()
-    elif question_type == QuestionTypeEnum.SYNONYM :
-        return SynonymsQuestion()
-    elif question_type == QuestionTypeEnum.ANTONYM :
-        return AntonymsQuestion()
-    elif question_type == QuestionTypeEnum.INCORRECT_WORD:
-        return IncorrectWordQuestion()
-    elif question_type == QuestionTypeEnum.FILL_IN_BLANK:
-        return FillInBlankQuestion()
-    elif question_type == QuestionTypeEnum.REARRANGE:
-        return RearrangenQuestion()
+def create_question_instance(type: QuestionTypeEnum, model_type = 'gemini') :
+    if type == QuestionTypeEnum.PRONUNCIATION :
+        return StressQuestion(model_type)
+    elif type == QuestionTypeEnum.STRESS :
+        return StressQuestion(model_type)
+    elif type == QuestionTypeEnum.SYNONYM :
+        return SynonymsQuestion(model_type)
+    elif type == QuestionTypeEnum.ANTONYM :
+        return AntonymsQuestion(model_type)
+    elif type == QuestionTypeEnum.INCORRECT_WORD:
+        return IncorrectWordQuestion(model_type)
+    elif type == QuestionTypeEnum.FILL_IN_BLANK:
+        return FillInBlankQuestion(model_type)
+    elif type == QuestionTypeEnum.REARRANGE:
+        return RearrangenQuestion(model_type)
     else:
         raise BadRequestException('type_invalid')

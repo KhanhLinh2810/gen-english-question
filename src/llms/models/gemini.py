@@ -25,7 +25,7 @@ class GeminiLLM(LLMBase):
                 cls._instance = super(GeminiLLM, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, temperature=0.7, max_tokens=1024, top_p=0.9):
+    def __init__(self, model = "gemini-2.5-flash", temperature=0.7, max_tokens=1024, top_p=0.9):
         if hasattr(self, "_initialized") and self._initialized:
             return
         self.model = "gemini-2.5-flash"
@@ -46,6 +46,11 @@ class GeminiLLM(LLMBase):
         Returns:
             str or dict: The processed response.
         """
+        if response.candidates and hasattr(response.candidates, "content"):
+            content = response.candidates[0].content
+        else:
+            return ""
+        
         if tools:
             processed_response = {
                 "content": None,
@@ -53,15 +58,15 @@ class GeminiLLM(LLMBase):
             }
 
             # Extract content from the first candidate
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
+            if hasattr(content, "parts") and content.parts:
+                for part in content.parts:
                     if hasattr(part, "text") and part.text:
                         processed_response["content"] = part.text
                         break
                     
             # Extract function calls
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
+            if hasattr(content, "parts") and content.parts:
+                for part in content.parts:
                     if hasattr(part, "function_call") and part.function_call:
                         fn = part.function_call
                         processed_response["tool_calls"].append(
@@ -73,8 +78,8 @@ class GeminiLLM(LLMBase):
 
             return processed_response
         else:
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
+            if hasattr(content, "parts") and content.parts:
+                for part in content.parts:
                     if hasattr(part, "text") and part.text:
                         return part.text
             return ""

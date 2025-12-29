@@ -7,10 +7,7 @@ from src.llms.models import GeminiLLM
 from src.llms.tools import GEN_INCORRECT_WORD_QUESTION_TOOL
 from src.llms.prompts import GEN_INCORRECT_WORD_QUESTION_PROMPT
 
-class IncorrectWordQuestion(Question):
-    def __init__(self):
-        self.llm = GeminiLLM()
-    
+class IncorrectWordQuestion(Question):    
     def generate_questions(self, list_words: List[str], num_question: int = 1, num_ans_per_question: int = 4):
         if list_words is None:
             list_words = []

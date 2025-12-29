@@ -3,7 +3,6 @@ import random
 
 from src.enums import QuestionTypeEnum
 from src.factories.gen_question.types.base import Question
-from src.llms.models import GeminiLLM
 from src.llms.prompts import GEN_NATURAL_SENTENCE_PROMPT
 
 
@@ -11,8 +10,6 @@ class RearrangenQuestion(Question):
     """
     This class generates multiple-choice 'rearrange' questions.
     """
-    def __init__(self):
-        self.llm = GeminiLLM()
 
     def generate_questions(self, list_words: List[str], num_question: int = 1, num_ans_per_question: int = 4):
         if not list_words:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from src.routers.public.quesion import route as question_route
+from src.routers.public.quesion_openai import route as question_route
 # from src.routers.public.auth import router as auth_route
 from src.middlewares.authenticate import authenticate
 

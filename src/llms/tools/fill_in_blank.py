@@ -1,38 +1,48 @@
 GEN_FILL_IN_BLANK_QUESTION_TOOL = {
     "type": "function",
     "function": {
-        "name": "gen_fill_in_blank_question",
+        "name": "gen_fill_in_blank_questions",
         "description": (
-            "Extract the components of a Fill in the Blank English question."
+            "Generate a list of Fill in the Blank English questions based on the provided requirements."
         ),
         "parameters": {
             "type": "object",
             "properties": {
-                "question": {
-                    "type": "string",
-                    "description": "The generated fill-in-the-blank question (e.g., 'She went to the market ____ it was near her home.')."
-                },
-                "choices": {
+                "questions": {
                     "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of answer choices (e.g., ['because', 'although', 'and', 'but'])."
-                },
-                "answer": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of the correct answer word(s) (e.g., ['because'])."
-                },
-                "explanation": {
-                    "type": "string",
-                    "description": "The correct full version of the sentence (before creating blanks)."
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "List of linguistic categories tested (e.g., 'connector', 'preposition', 'verb tense', etc.)."
+                    "description": "A list of generated fill-in-the-blank questions.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "content": {
+                                "type": "string",
+                                "description": "The generated fill-in-the-blank sentence (e.g., 'She went to the market ____ it was near her home.')."
+                            },
+                            "choices": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of answer choices."
+                            },
+                            "answer": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of the correct answer word(s)."
+                            },
+                            "explanation": {
+                                "type": "string",
+                                "description": "The correct full version of the sentence (before creating blanks) and the reason why the answer is correct."
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of linguistic categories (e.g., 'connector', 'preposition')."
+                            }
+                        },
+                        "required": ["content", "choices", "answer", "explanation", "tags"]
+                    }
                 }
             },
-            "required": ["question", "choices", "answer", "explanation", "tags"]
+            "required": ["questions"]
         }
     }
 }

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from src.services.eval import QuestionQualityEvaluator
 from src.factories.gen_question.factory import create_question_instance
 from src.factories.gen_question_for_paragraph.factory import create_question_paragraph_instance
 from src.utils.response import res_ok
@@ -16,16 +17,28 @@ print("Including question routes...")
 
 @route.post('/')
 async def generate_question(body: ICreateQuestion):
-    question = create_question_instance(body.question_type)
+    question = create_question_instance(body.type, 'open_ai')
     list_questions = question.generate_questions(
         list_words=body.list_words,
         num_question=body.num_question,
         num_ans_per_question=body.num_ans_per_question,
     )
-    return JSONResponse(status_code=200, content=res_ok(list_questions))
+    print("+++++", list_questions)
+    evaluator = QuestionQualityEvaluator()
+    final_data = []
+    for q in list_questions:
+        data = {**body.model_dump(), **q} 
+        
+        score = evaluator.evaluate(data)
+        data["score"] = score 
+        final_data.append(data)
+        
+    return JSONResponse(status_code=200, content=res_ok(final_data))
 
 @route.post('/sentence')
-async def generate_questions_from_sentence(body: ICreateQuestionForParagraph, request: Request):
+async def generate_questions_from_sentence(body: ICreateQuestionForParagraph):
+    evaluator = QuestionQualityEvaluator()
+    print(evaluator._grammar_tool(body.paragraph))
     # error_sentences = []
     # model_input = ModelInput(**body.model_dump(), user_id=None)
     # try:

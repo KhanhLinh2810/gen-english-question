@@ -10,11 +10,6 @@ from src.services.AI.false_ans_generator import FalseAnswerGenerator
 
 class SynonymsQuestion(Question):
     INDEX = "vocabulary"
-    false_ans_gen: FalseAnswerGenerator = None
-
-    def __init__(self):
-        if self.false_ans_gen is None:
-            self.false_ans_gen = FalseAnswerGenerator()
 
     def generate_questions(self, list_words: List[str] = None, num_question: int = 1,
                            num_ans_per_question: int = 4, cefr: int = 3):
@@ -68,8 +63,8 @@ class SynonymsQuestion(Question):
             #     choices.append(candidate)
             #     used_choices.add(candidate)
             #     max_loop -= 1
-
-            distractors = self.false_ans_gen.generate_distractors_from_synonyms(
+            false_ans_gen = FalseAnswerGenerator()
+            distractors = false_ans_gen.generate_distractors_from_synonyms(
                 target_word=[correct_answer, question_word],
                 num_false_answers=num_ans_per_question - 1
             )

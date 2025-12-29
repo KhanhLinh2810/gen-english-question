@@ -22,7 +22,7 @@ class ParagraphQuestion(Question):
 
         type_to_total_count = {}
         for question_data in data.list_create_question:
-            qtype = question_data.question_type
+            qtype = question_data.type
             num = question_data.num_question
             type_to_total_count[qtype] = type_to_total_count.get(qtype, 0) + num
 

@@ -23,6 +23,7 @@ def env_int_list(key: str, default: list[int]) -> list[int]:
 config = {
     "app": {
         'port': os.getenv("PORT"),
+        'ignore_authen': bool(os.getenv("IGNORE_AUTHEN", False)),
     },
     "db": {
         "host": os.getenv("DB_HOST"),
@@ -41,6 +42,10 @@ config = {
     },
     "google": {
         "api_key": os.getenv("GOOGLE_API_KEY"),
+    },
+    "open_ai": {
+        "api_key": os.getenv("OPEN_AI_API_KEY", ""),
+        "base_url": os.getenv("OPEN_AI_BASE_URL"),        
     },
     "elastic": {
         "url": os.getenv("ELASTIC_URL"),

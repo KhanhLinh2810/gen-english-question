@@ -1,12 +1,13 @@
 GEN_FILL_IN_BLANK_QUESTION_PROMPT = """
 ### Task
 You are an expert in automatically generating English exam questions.
-Create **one "Fill in the Blank" question** in English.
+Create **one list of "Fill in the Blank" question** in English.
 
 ### Input
 - A list of words to be used to create the sentence.
 - Question type: "single-choice" or "multiple-choice".
 - Desired number of answer choices.
+- Number of question to generate.
 
 ### Core requirements
 1. First produce a **grammatically correct, natural, meaningful English sentence** using all or most of the given words.
@@ -27,6 +28,10 @@ Create **one "Fill in the Blank" question** in English.
 - Avoid redundant fillers such as "but yet", "and also", "and then then".
 - If you use "because", do not also use "so" in the same causal relationship.
 
+### IMPORTANT BALANCE RULE  
+- Do NOT overuse connectors.
+- Prefer testing **verbs, verb tense, collocations, prepositions, vocabulary, or fixed expressions** when appropriate.
+- Only test connectors when they are truly central to the sentence meaning.
 ---
 
 ### Blank-creation rules
