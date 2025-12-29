@@ -23,15 +23,16 @@ async def generate_question(body: ICreateQuestion):
         num_question=body.num_question,
         num_ans_per_question=body.num_ans_per_question,
     )
-    print("+++++", list_questions)
     evaluator = QuestionQualityEvaluator()
     final_data = []
     for q in list_questions:
         data = {**body.model_dump(), **q} 
         
-        score = evaluator.evaluate(data)
-        data["score"] = score 
-        final_data.append(data)
+        res_eval = evaluator.evaluate(data)
+        final_data.append({
+            **q,
+            "score": res_eval["score"] 
+        })
         
     return JSONResponse(status_code=200, content=res_ok(final_data))
 

@@ -13,6 +13,7 @@ class GeneratedQuestion:
 
     paragraph: Optional[str] = None
     content: Optional[str] = None
+    explanation: Optional[str] = None
     list_words: List[str] = field(default_factory=list)
     choices: List[IChoice] = field(default_factory=list)
 

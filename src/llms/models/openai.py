@@ -25,7 +25,7 @@ def extract_json(text):
 
 class OpenAILLM(LLMBase):
     # "gpt-4.1-nano-2025-04-14" 
-    def __init__(self, model="Qwen/Qwen2.5-3B-Instruct", temperature=0.1, max_tokens=1024, top_p=0.1, top_k=1, enable_vision=False, vision_details="auto", http_client=None):
+    def __init__(self, model="Qwen/Qwen2.5-3B-Instruct", temperature=0.2, max_tokens=1024, top_p=0.3, top_k=5, enable_vision=False, vision_details="auto", http_client=None):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens

@@ -47,7 +47,7 @@ class QuestionQualityEvaluator:
         d_score, d_issues = self._check_distractors(q)
         all_issues.append({"field": "distractor", "score": d_score, "issues": d_issues})
 
-        w_score = self.weights["structure"] + self.weights["popularity"] + self.weights["distractor"] + self.weights["ai_adjust_factor"] if check_by_ai else 0.0
+        w_score = self.weights["structure"] + self.weights["popularity"] + self.weights["distractor"] + (self.weights["ai_adjust_factor"] if check_by_ai else 0.0)
         final_score = (
             s_score * self.weights["structure"] +
             p_score * self.weights["popularity"] +
@@ -57,7 +57,7 @@ class QuestionQualityEvaluator:
         rounded_score = math.ceil(final_score * 10) / 10
 
         return {
-            "score": min(round(rounded_score, 1), 10.0),
+            "score": min(round(rounded_score, 1), 10.0) * 10,
             "issues": all_issues,
             "suggestions": list(set(all_suggestions))
         }
@@ -68,11 +68,20 @@ class QuestionQualityEvaluator:
         score = 1.0
 
         # Question text
-        if not q.content or not q.content.strip():
+        if not q["content"] or not q["content"].strip():
             issues.append("missing_question_text")
             score -= self.penalties["missing_question_text"]
+        elif q["type"] == QuestionTypeEnum.FILL_IN_BLANK and q["explanation"] and q["explanation"].strip():
+            grammar_count, grammar_msgs = self._check_grammar(q["explanation"])
+            if grammar_count > 0:
+                issues.append({
+                    "type": "question_grammar_error",
+                    "count": grammar_count,
+                    "details": grammar_msgs
+                })
+                score -= grammar_count * self.penalties["grammar_error_per_count"]
         else:
-            grammar_count, grammar_msgs = self._check_grammar(q.content)
+            grammar_count, grammar_msgs = self._check_grammar(q["content"])
             if grammar_count > 0:
                 issues.append({
                     "type": "question_grammar_error",
@@ -82,7 +91,7 @@ class QuestionQualityEvaluator:
                 score -= grammar_count * self.penalties["grammar_error_per_count"]
 
         # Choices
-        if not q.choices or len(q.choices) == 0:
+        if not q["choices"] or len(q["choices"]) == 0:
             issues.append("missing_choices")
             score -= self.penalties["missing_choices"]
         else:
@@ -90,18 +99,18 @@ class QuestionQualityEvaluator:
             unique_contents = []
             has_correct = False
 
-            for choice in q.choices:
-                content = (choice.content or "").strip()
+            for choice in q["choices"]:
+                content = (choice["content"] or "").strip()
                 if not content:
                     empty_count += 1
                     continue
                 unique_contents.append(content)
-                if choice.is_correct:
+                if choice["is_correct"]:
                     has_correct = True
 
             if empty_count > 0:
                 issues.append(f"{empty_count}_empty_choices")
-                score -= self.penalties["empty_choice_ratio"] * (empty_count / len(q.choices))
+                score -= self.penalties["empty_choice_ratio"] * (empty_count / len(q["choices"]))
 
             if len(set(unique_contents)) < len(unique_contents):
                 issues.append("duplicated_choices")
@@ -125,9 +134,9 @@ class QuestionQualityEvaluator:
         return max(score, 0.0), issues, suggestions
 
     def _check_popularity(self, q: GeneratedQuestion) -> float:
-        unique_words = set(q.content.lower().split())
-        for choice in q.choices or []:
-            unique_words.update((choice.content or "").lower().split())
+        unique_words = set(q["content"].lower().split())
+        for choice in q["choices"] or []:
+            unique_words.update((choice["content"] or "").lower().split())
 
         if not unique_words:
             return 0.0
@@ -135,7 +144,7 @@ class QuestionQualityEvaluator:
         es = Elastic()
         resp = es.search(
             index=self.INDEX,
-            size=0,
+            size=1,
             query={"terms": {"word.keyword": list(unique_words)}},
             aggs={
                 "by_word": {
@@ -215,23 +224,24 @@ class QuestionQualityEvaluator:
         matches = self._grammar_tool.check(text)
         serious_matches = [
             m for m in matches
-            if m.ruleIssueType in {"grammar", "misspelling"}
-            and not m.ruleId.startswith("UPPERCASE_SENTENCE_START")
+            if m.rule_issue_type in {"grammar", "misspelling"}
+            and not m.rule_id.startswith("UPPERCASE_SENTENCE_START")
         ]
 
         error_messages = [
             {
                 "message": m.message,
-                "rule": m.ruleId,
-                "error_text": text[m.offset:m.offset + m.errorLength],
+                "rule": m.rule_id,
+                "error_text": text[m.offset:m.offset + m.error_length],
                 "suggestions": m.replacements[:3]
             }
             for m in serious_matches[:max_errors]
         ]
+        print(error_messages)
         return len(error_messages), error_messages
 
     def _check_pos_and_meaning_of_choice(self, q: GeneratedQuestion) -> Optional[float]:
-        if q.type in {QuestionTypeEnum.PRONUNCIATION, QuestionTypeEnum.STRESS}:
+        if q["type"] in {QuestionTypeEnum.PRONUNCIATION, QuestionTypeEnum.STRESS}:
             return 1.0
 
         to_be_regex = re.compile(
@@ -242,8 +252,8 @@ class QuestionQualityEvaluator:
         cleaned_choices: List[str] = []
         score = 1.0
 
-        for c in q.choices or []:
-            content = (c.content or "").strip()
+        for c in q["choices"] or []:
+            content = (c["content"] or "").strip()
             if not content:
                 score -= self.distractor_cfg["empty_choice_deduction"]
                 continue
@@ -257,14 +267,14 @@ class QuestionQualityEvaluator:
         docs = [self.nlp(text) for text in cleaned_choices]
         tokens = [token for doc in docs for token in doc]
 
-        return score * self.lexical_family_difficulty(tokens, q.num_ans_per_question or 4)
+        return score * self.lexical_family_difficulty(tokens, q["num_ans_per_question"] or 4)
 
     def _cal_score_embedding_similarity(self, q: GeneratedQuestion) -> Optional[float]:
-        if q.type not in {QuestionTypeEnum.SYNONYM, QuestionTypeEnum.ANTONYM, QuestionTypeEnum.VOCAB}:
+        if q["type"] not in {QuestionTypeEnum.SYNONYM, QuestionTypeEnum.ANTONYM, QuestionTypeEnum.VOCAB}:
             return None
 
-        correct = [c.content for c in q.choices if c.is_correct]
-        distractors = [c.content for c in q.choices if not c.is_correct]
+        correct = [c["content"] for c in q["choices"] if c["is_correct"]]
+        distractors = [c["content"] for c in q["choices"] if not c["is_correct"]]
         if not correct or not distractors:
             return 0.0
 
@@ -294,23 +304,23 @@ class QuestionQualityEvaluator:
             return 1.0
 
     def _cal_score_for_paragraph(self, q: GeneratedQuestion) -> Optional[float]:
-        if q.type not in {
+        if q["type"] not in {
             QuestionTypeEnum.VOCAB, QuestionTypeEnum.FACT,
             QuestionTypeEnum.MAIN_IDEA, QuestionTypeEnum.INFERENCE,
             QuestionTypeEnum.PURPOSE
         }:
             return None
 
-        correct_answer = next((c.content for c in q.choices if c.is_correct), None)
-        if not correct_answer or not q.paragraph:
+        correct_answer = next((c["content"] for c in q["choices"] if c["is_correct"]), None)
+        if not correct_answer or not q["paragraph"]:
             return 0.0
 
-        words = q.paragraph.lower().split()
+        words = q["paragraph"].lower().split()
         word_count = len(words)
         p_cfg = self.distractor_cfg["paragraph"]
 
         # Length score
-        if q.type == QuestionTypeEnum.VOCAB:
+        if q["type"] == QuestionTypeEnum.VOCAB:
             thresholds = p_cfg["vocab_length_thresholds"]
             scores = [0.2, 0.3, 0.4, 0.5]
         else:
@@ -324,7 +334,7 @@ class QuestionQualityEvaluator:
                 break
 
         # Difficulty score
-        doc = self.nlp(q.paragraph)
+        doc = self.nlp(q["paragraph"])
         sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
         if not sentences:
             return length_score * p_cfg["length_weight"]
