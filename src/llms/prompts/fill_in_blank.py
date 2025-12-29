@@ -43,7 +43,7 @@ Create **one list of "Fill in the Blank" questions** in English.
    - The version with blanks must be assigned to the `content` field.
    - The text replaced by blanks is the **answer** of the question.
    - Example:
-     - content: "She ____ to bed later yesterday."
+     - content: "She ____ to bed late yesterday."
      - answer: ["went"]
 
 4. The blank(s) must make sense — the question should be solvable through grammar or meaning, not guessing.
