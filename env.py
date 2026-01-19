@@ -23,7 +23,7 @@ def env_int_list(key: str, default: list[int]) -> list[int]:
 config = {
     "app": {
         'port': os.getenv("PORT"),
-        'ignore_authen': bool(os.getenv("IGNORE_AUTHEN", False)),
+        'ignore_authen': os.getenv("IGNORE_AUTHEN", "false").lower() == "true",
     },
     "db": {
         "host": os.getenv("DB_HOST"),
@@ -31,12 +31,12 @@ config = {
         "user": os.getenv("DB_USER"),
         "password": os.getenv("DB_PASSWORD"),
         "database": os.getenv("DB_DATABASE"),
-        "pool_size": int(os.getenv("POOL_SIZE")) | 8,
-        "max_overflow": int(os.getenv("MAX_OVERFLOW")) | 16,
-        "pool_recycle": int(os.getenv("POOL_RECYCLE")),
+        "pool_size": int(os.getenv("POOL_SIZE") or 8),
+        "max_overflow": int(os.getenv("MAX_OVERFLOW") or 16),
+        "pool_recycle": int(os.getenv("POOL_RECYCLE") or 800),
     },
     "jwt": {
-        "expired_in": int(os.getenv("JWT_EXPIRATION_DELTA")) | 24, # hour
+        "expired_in": int(os.getenv("JWT_EXPIRATION_DELTA") or 24), # hour
         "algorithm": os.getenv("JWT_ALGORITHM"),
         "secret_key": os.getenv("JWT_SECRET"),
     },
