@@ -33,12 +33,11 @@ class AntonymsQuestion(Question):
                 "is_correct": True
             }]
 
-            distractors = false_ans_gen.generate_distractors_from_antonyms(
+            distractors = false_ans_gen.generate_distractors_from_antonyms_and_synonyms(
                 correct_words=[correct_answer, question_word],
                 num_distractors=num_ans_per_question - 1,
-                list_antonym_with_question_word  = list_antonym_with_question_word
+                list_exclude_word  = list_antonym_with_question_word
             )
-
             for d in distractors:
                 choices.append({
                     "content": d.lower(),

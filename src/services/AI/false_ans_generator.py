@@ -207,80 +207,79 @@ class FalseAnswerGenerator:
 
         return crct_ans, sum(all_answers, [])
     
-    def generate_distractors_from_synonyms(
+    # def generate_distractors_from_synonyms(
+    #     self,
+    #     correct_words: list[str],
+    #     num_distractors: int = 3,
+    #     list_antonym_with_question_word: list[str] = []
+    # ):
+    #     """
+    #     Generate distractors for synonym questions.
+    #     Input: 2 correct synonymous words
+    #     Output: distractors semantically related but NOT synonyms
+    #     """
+
+    #     assert len(correct_words) == 2, "Require exactly 2 correct synonyms"
+
+    #     w1, w2 = [w.lower().strip() for w in correct_words]
+
+    #     candidates = set()
+
+    #     # -------- 1. Collect candidates from sense2vec ----------
+    #     for w in [w1, w2]:
+    #         sense = self._s2v.get_best_sense(w.replace(" ", "_"))
+    #         if sense and sense in self._s2v:
+    #             sims = self._s2v.most_similar(sense, n=30)
+    #             formatted = change_format(sims)
+    #             candidates.update(formatted)
+
+    #     # Remove originals
+    #     candidates = {
+    #         c for c in candidates
+    #         if c.lower() not in {w1, w2}
+    #     }
+
+    #     if not candidates:
+    #         return []
+
+    #     candidates = list(candidates)
+
+    #     # -------- 2. Sentence embedding ----------
+    #     emb_correct = self._sentence_model.encode(correct_words)
+    #     emb_candidates = self._sentence_model.encode(candidates)
+
+    #     # similarity to each correct word
+    #     sim_1 = cosine_similarity(emb_candidates, emb_correct[0].reshape(1, -1))
+    #     sim_2 = cosine_similarity(emb_candidates, emb_correct[1].reshape(1, -1))
+
+    #     final_candidates = []
+
+    #     for idx, word in enumerate(candidates):
+    #         s1 = sim_1[idx][0]
+    #         s2 = sim_2[idx][0]
+
+    #         # loại bỏ các từ quá giống
+    #         if max(s1, s2) > sim_max:
+    #             continue
+
+    #         # loại bỏ các từ quá khác
+    #         if max(s1, s2) < sim_min:
+    #             continue
+
+    #         final_candidates.append((word, max(s1, s2)))
+
+    #     chosen = random.sample(
+    #         final_candidates,
+    #         k=min(num_distractors, len(final_candidates))
+    #     )
+
+    #     return [w.capitalize() for w, _ in chosen]
+
+    def generate_distractors_from_antonyms_and_synonyms(
         self,
         correct_words: list[str],
         num_distractors: int = 3,
-        sim_min: float = 0.35,
-        sim_max: float = 0.75
-    ):
-        """
-        Generate distractors for synonym questions.
-        Input: 2 correct synonymous words
-        Output: distractors semantically related but NOT synonyms
-        """
-
-        assert len(correct_words) == 2, "Require exactly 2 correct synonyms"
-
-        w1, w2 = [w.lower().strip() for w in correct_words]
-
-        candidates = set()
-
-        # -------- 1. Collect candidates from sense2vec ----------
-        for w in [w1, w2]:
-            sense = self._s2v.get_best_sense(w.replace(" ", "_"))
-            if sense and sense in self._s2v:
-                sims = self._s2v.most_similar(sense, n=30)
-                formatted = change_format(sims)
-                candidates.update(formatted)
-
-        # Remove originals
-        candidates = {
-            c for c in candidates
-            if c.lower() not in {w1, w2}
-        }
-
-        if not candidates:
-            return []
-
-        candidates = list(candidates)
-
-        # -------- 2. Sentence embedding ----------
-        emb_correct = self._sentence_model.encode(correct_words)
-        emb_candidates = self._sentence_model.encode(candidates)
-
-        # similarity to each correct word
-        sim_1 = cosine_similarity(emb_candidates, emb_correct[0].reshape(1, -1))
-        sim_2 = cosine_similarity(emb_candidates, emb_correct[1].reshape(1, -1))
-
-        final_candidates = []
-
-        for idx, word in enumerate(candidates):
-            s1 = sim_1[idx][0]
-            s2 = sim_2[idx][0]
-
-            # loại bỏ các từ quá giống
-            if max(s1, s2) > sim_max:
-                continue
-
-            # loại bỏ các từ quá khác
-            if max(s1, s2) < sim_min:
-                continue
-
-            final_candidates.append((word, max(s1, s2)))
-
-        chosen = random.sample(
-            final_candidates,
-            k=min(num_distractors, len(final_candidates))
-        )
-
-        return [w.capitalize() for w, _ in chosen]
-
-    def generate_distractors_from_antonyms(
-        self,
-        correct_words: list[str],
-        num_distractors: int = 3,
-        list_antonym_with_question_word: list[str] = []
+        list_exclude_word: list[str] = []
     ):
         """
         Generate distractors for antonym questions.
@@ -302,7 +301,13 @@ class FalseAnswerGenerator:
                 candidates.update(change_format(sims)) #sims thường đi kèm hậu tố tag(happy|ADJ) -> change_format giúp xóa hậu tố đó đi
 
         # xóa các từ là question và answer và trong list từ trái nghĩa với question
-        exclude = {w1, w2} | {w.lower() for w in list_antonym_with_question_word}
+        exclude = {w1, w2} | {w.lower() for w in list_exclude_word}
+        # final_candidates = set()
+        # for c in candidates:
+        #     for word in exclude:
+        #         if word in c:
+        #             final_candidates.add(c)
+        # print(final_candidates)
         candidates = [c for c in candidates if c.lower() not in exclude]
 
         if not candidates:

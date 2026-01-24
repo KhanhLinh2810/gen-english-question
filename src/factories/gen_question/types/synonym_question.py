@@ -9,41 +9,46 @@ from src.services.AI.false_ans_generator import FalseAnswerGenerator
 
 
 class SynonymsQuestion(Question):
-    INDEX = "vocabulary"
+    INDEX = "meaning_vocabulary"
+    false_ans_gen: FalseAnswerGenerator = None
+
 
     def generate_questions(self, list_words: List[str] = None, num_question: int = 1,
                            num_ans_per_question: int = 4, cefr: int = 3):
 
         list_words = list_words or []
         list_unique_words = set(list_words)
+        random.shuffle(list_unique_words)
 
         result = []
         used_words = set()
+        false_ans_gen = FalseAnswerGenerator()
 
         for _ in range(num_question):
-            question_word, correct_answer = \
+            question_word, correct_answer, list_synonym_with_question_word = \
                 self._pick_question_word(list_unique_words, used_words, cefr)
 
-            choices = [correct_answer]
-            false_ans_gen = FalseAnswerGenerator()
-            distractors = false_ans_gen.generate_distractors_from_synonyms(
-                target_word=[correct_answer, question_word],
-                num_false_answers=num_ans_per_question - 1
-            )
-            choices.extend(distractors)
-            random.shuffle(choices)
+            choices = [{
+                "content": correct_answer,
+                "is_correct": True
+            }]
 
-            final_choices = []
-            for c in choices:
-                final_choices.append({
-                    "content": c,
-                    "is_correct": c == correct_answer
+            distractors = false_ans_gen.generate_distractors_from_antonyms_and_synonyms(
+                correct_words=[correct_answer, question_word],
+                num_distractors=num_ans_per_question - 1,
+                list_exclude_word  = list_synonym_with_question_word
+            )
+            for d in distractors:
+                choices.append({
+                    "content": d.lower(),
+                    "is_correct": False
                 })
+            random.shuffle(choices)
 
             result.append({
                 "content": QuestionContentEnum.SYNONYM.value.format(word=question_word),
                 "type": QuestionTypeEnum.SYNONYM,
-                "choices": final_choices,
+                "choices": choices,
             })
 
         return result
@@ -89,7 +94,7 @@ class SynonymsQuestion(Question):
                 continue
 
             correct = random.choice(valid_syns)
-            return source, correct
+            return source, correct, valid_syns
         # return source, correct, set(syns)
 
         # FALLBACK ES
@@ -108,5 +113,5 @@ class SynonymsQuestion(Question):
             if not valid_syns:
                 continue
 
-            return source, random.choice(valid_syns)
+            return source, random.choice(valid_syns), valid_syns
             # return source, random.choice(valid_syns), set(syns)
