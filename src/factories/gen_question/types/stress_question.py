@@ -19,8 +19,7 @@ class StressQuestion(Question):
 
         # Process data: group words by stress pattern
         num_word_in_list_per_question = self.cal_num_word_in_list_available_per_question(len(list_words), num_question, num_ans_per_question)
-        stress_groups = self.stress_groups_from_list_words(list_words, cefr=cefr)
-
+        stress_groups = self.stress_groups_from_list_words(list_words)
         # create
         def choice_random_words_in_stress_group(stress_group_key: int):
             stress_group = stress_groups[stress_group_key]
@@ -41,14 +40,14 @@ class StressQuestion(Question):
             else:
                 different_stress = random.randint(1, 4)
                 list_different_word_ipa = self.get_random_word_and_ipa_by_stress_is_only_one_stress(different_stress)
-                if different_word_ipa is None:
+                if list_different_word_ipa is None:
                     continue  # Skip this question if no valid word is found
                 different_word, different_ipa = list_different_word_ipa[0]
 
             choices.append({
                 "content": different_word,
-                "explaination": different_ipa
-            })
+                "explanation": different_ipa
+            })            
 
             # Get words with common stress
             if list_stress_group_keys:
@@ -58,7 +57,7 @@ class StressQuestion(Question):
                     common_word, common_ipa = common_word_ipa
                     choices.append({
                         "content": common_word,
-                        "explaination": common_ipa
+                        "explanation": common_ipa
                     })
             else:
                 common_stress = rand_exclude(1, 4, different_stress)
@@ -71,19 +70,19 @@ class StressQuestion(Question):
                         common_word, common_ipa = common_word_ipa
                         choices.append({
                             "content": common_word,
-                            "explaination": common_ipa
+                            "explanation": common_ipa
                         })
 
-
-            final_choices = [({
+            final_choices = [{
                 "content": c["content"],
-                "explaination": c["explaination"],
+                "explanation": c["explanation"],
                 "is_correct": c["content"] == different_word
-            }) for c in choices]
+            } for c in choices]
+            random.shuffle(final_choices)
             result.append({
                 "content": QuestionContentEnum.STRESS.value,
                 "type": QuestionTypeEnum.STRESS,
-                "choices": random.shuffle(final_choices)
+                "choices": final_choices
             })
         return result
 
@@ -171,7 +170,7 @@ class StressQuestion(Question):
                 
                 if word and ipa:
                     results.append((word, ipa))
-            
+        # print(results)
         if not results:
                 return None
         

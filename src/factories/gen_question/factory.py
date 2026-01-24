@@ -1,3 +1,4 @@
+from src.factories.gen_question.types.pronunciation_question import PronunciationQuestion
 from src.enums import QuestionTypeEnum
 from src.factories.gen_question.types.antonym_question import AntonymsQuestion
 from src.factories.gen_question.types.incorrect_word_question import IncorrectWordQuestion
@@ -10,7 +11,7 @@ from src.utils.exceptions import BadRequestException
 
 def create_question_instance(type: QuestionTypeEnum, model_type = 'gemini') :
     if type == QuestionTypeEnum.PRONUNCIATION :
-        return StressQuestion(model_type)
+        return PronunciationQuestion(model_type)
     elif type == QuestionTypeEnum.STRESS :
         return StressQuestion(model_type)
     elif type == QuestionTypeEnum.SYNONYM :

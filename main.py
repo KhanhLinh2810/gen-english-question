@@ -1,12 +1,32 @@
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.concurrency import asynccontextmanager
 
 
+from src.loaders.database import init_db
+from src.services.schedule import verify_answer_by_ai
 from src.routers.public.public import router
 from src.utils.response import handler_error
-from src.services.AI.false_ans_generator import FalseAnswerGenerator
+from apscheduler.schedulers.background import BackgroundScheduler
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+
+    # scheduler = BackgroundScheduler()
+    # # Chạy lúc 3 giờ sáng mỗi ngày
+    # scheduler.add_job(
+    #     verify_answer_by_ai, 
+    #     trigger='cron', 
+    #     hour=3, 
+    #     minute=0
+    # )
+    # scheduler.start()
+        
+    yield  
     
-app = FastAPI()
+    # scheduler.shutdown()
+    
+app = FastAPI(lifespan=lifespan)
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
     return handler_error(exc)

@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.loaders.database import save_questions_task
 from src.services.eval import QuestionQualityEvaluator
 from src.factories.gen_question.factory import create_question_instance
 from src.factories.gen_question_for_paragraph.factory import create_question_paragraph_instance
@@ -16,7 +18,7 @@ route = APIRouter(prefix="/question", tags=["Question"])
 print("Including question routes...")
 
 @route.post('/')
-async def generate_question(body: ICreateQuestion):
+async def generate_question(body: ICreateQuestion, background_tasks: BackgroundTasks):
     question = create_question_instance(body.type, 'open_ai')
     list_questions = question.generate_questions(
         list_words=body.list_words,
@@ -34,6 +36,7 @@ async def generate_question(body: ICreateQuestion):
             "score": res_eval["score"] 
         })
         
+    background_tasks.add_task(save_questions_task, final_data)  
     return JSONResponse(status_code=200, content=res_ok(final_data))
 
 @route.post('/sentence')

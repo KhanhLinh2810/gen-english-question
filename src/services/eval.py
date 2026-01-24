@@ -92,8 +92,8 @@ class QuestionQualityEvaluator:
 
         # Choices
         if not q["choices"] or len(q["choices"]) == 0:
-            issues.append("missing_choices")
-            score -= self.penalties["missing_choices"]
+            issues.append("missing_choice")
+            score -= self.penalties["missing_choice"]
         else:
             empty_count = 0
             unique_contents = []
