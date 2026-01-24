@@ -79,7 +79,7 @@ class QuestionQualityEvaluator:
                     "count": grammar_count,
                     "details": grammar_msgs
                 })
-                score -= grammar_count * self.penalties["grammar_error_per_count"]
+                score -= grammar_count * self.penalties["grammar_error"]
         else:
             grammar_count, grammar_msgs = self._check_grammar(q["content"])
             if grammar_count > 0:
@@ -88,7 +88,7 @@ class QuestionQualityEvaluator:
                     "count": grammar_count,
                     "details": grammar_msgs
                 })
-                score -= grammar_count * self.penalties["grammar_error_per_count"]
+                score -= grammar_count * self.penalties["grammar_error"]
 
         # Choices
         if not q["choices"] or len(q["choices"]) == 0:
@@ -129,7 +129,7 @@ class QuestionQualityEvaluator:
                         "count": grammar_count,
                         "details": grammar_msgs
                     })
-                    score -= grammar_count * self.penalties["grammar_error_per_count"]
+                    score -= grammar_count * self.penalties["grammar_error"]
 
         return max(score, 0.0), issues, suggestions
 
@@ -277,6 +277,8 @@ class QuestionQualityEvaluator:
         distractors = [c["content"] for c in q["choices"] if not c["is_correct"]]
         if not correct or not distractors:
             return 0.0
+        
+        print(correct, distractors)
 
         ai = FalseAnswerGenerator()
         emb_correct = ai.get_embedding_list_word(correct)

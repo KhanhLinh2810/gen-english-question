@@ -93,7 +93,7 @@ class FalseAnswerGenerator:
         """
         Returns sentence model embedding of answer and distractors.
         """
-        return self._sentence_model.encode([word_list])
+        return self._sentence_model.encode(word_list)
 
     def filter_output(self, orig, dummies):
         """Filter out final answers.
@@ -116,7 +116,7 @@ class FalseAnswerGenerator:
 
         return filtered_dist
 
-    def __mmr(self, doc_embedding, word_embedding, words, diversity=0.9):
+    def __mmr(self, doc_embedding, word_embedding, words, diversity=0.9, n_results=2):
         """Word diversity using MMR - Maximal Marginal Relevance.
 
         Args:
@@ -128,6 +128,7 @@ class FalseAnswerGenerator:
         Returns:
             list[str]: list of final answers.
         """
+
         # extract similarity between words and docs
         word_doc_similarity = cosine_similarity(word_embedding, doc_embedding)
         word_similarity = cosine_similarity(word_embedding)
@@ -135,8 +136,8 @@ class FalseAnswerGenerator:
         kw_idx = [np.argmax(word_doc_similarity)]  # NumPy 2.0.2 vẫn hỗ trợ np.argmax()
         dist_idx = [i for i in range(len(words)) if i != kw_idx[0]]
 
-        for _ in range(3):
-            dist_similarities = word_doc_similarity[dist_idx, :]
+        for _ in range(min(n_results - 1, len(dist_idx))):
+            dist_similarities = word_doc_similarity[dist_idx,:]
             target_similarities = np.max(
                 word_similarity[dist_idx][:, kw_idx], axis=1
             )
@@ -181,7 +182,7 @@ class FalseAnswerGenerator:
             return self.filter_output(query, formatted_string)
         except AssertionError:
             return None
-
+        
     def get_output(self, filtered_kws):
         """Generate false answers for whole context.
 
@@ -279,9 +280,7 @@ class FalseAnswerGenerator:
         self,
         correct_words: list[str],
         num_distractors: int = 3,
-        sim_min: float = 0.25,
-        sim_max: float = 0.8,
-        balance_threshold: float = 0.2
+        list_antonym_with_question_word: list[str] = []
     ):
         """
         Generate distractors for antonym questions.
@@ -299,56 +298,62 @@ class FalseAnswerGenerator:
         for w in [w1, w2]:
             sense = self._s2v.get_best_sense(w.replace(" ", "_"))
             if sense and sense in self._s2v:
-                sims = self._s2v.most_similar(sense, n=40)
-                candidates.update(change_format(sims))
+                sims = self._s2v.most_similar(sense, n=num_distractors*3)
+                candidates.update(change_format(sims)) #sims thường đi kèm hậu tố tag(happy|ADJ) -> change_format giúp xóa hậu tố đó đi
 
-        # Remove originals
-        candidates = {
-            c for c in candidates
-            if c.lower() not in {w1, w2}
-        }
+        # xóa các từ là question và answer và trong list từ trái nghĩa với question
+        exclude = {w1, w2} | {w.lower() for w in list_antonym_with_question_word}
+        candidates = [c for c in candidates if c.lower() not in exclude]
 
         if not candidates:
             return []
 
         candidates = list(candidates)
+        random.shuffle(candidates)
+        candidates = candidates[:min(num_distractors*2, 15)]
 
         # -------- 2. Sentence embedding ----------
         emb_correct = self._sentence_model.encode(correct_words)
-        emb_candidates = self._sentence_model.encode(candidates)
+        emb_candidates = self._sentence_model.encode(candidates[:min(15, len(candidates))])
 
-        sim_1 = cosine_similarity(emb_candidates, emb_correct[0].reshape(1, -1))
-        sim_2 = cosine_similarity(emb_candidates, emb_correct[1].reshape(1, -1))
+        # sim_1 = cosine_similarity(emb_candidates, emb_correct[0].reshape(1, -1))
+        # sim_2 = cosine_similarity(emb_candidates, emb_correct[1].reshape(1, -1))
 
-        final_candidates = []
+        # final_candidates = []
 
-        for idx, word in enumerate(candidates):
-            s1 = sim_1[idx][0]
-            s2 = sim_2[idx][0]
+        # sqa = cosine_similarity(emb_correct[0].reshape(1, -1), emb_correct[1].reshape(1, -1))[0][0]
+        # dynamic_sim_max = min(sqa / 1.2, sim_max)
+        # for idx, word in enumerate(candidates):
+        #     s1 = sim_1[idx][0]
+        #     s2 = sim_2[idx][0]
 
-            # quá gần một cực → loại
-            if max(s1, s2) > sim_max:
-                continue
+        #     # không thuộc ngưỡng
+        #     if max(s1, s2) > dynamic_sim_max or max(s1, s2) < sim_min:
+        #         continue
+        #     # lệch hẳn 1 phía
+        #     if abs(s1 - s2) > balance_threshold:
+        #         continue
 
-            # quá xa cả hai → loại
-            if max(s1, s2) < sim_min:
-                continue
+        #     final_candidates.append(
+        #         (word, (s1 + s2) / 2)
+        #     )
 
-            # không cân bằng → nghiêng hẳn về 1 phía
-            if abs(s1 - s2) > balance_threshold:
-                continue
+        # if not final_candidates:
+        #     return []
 
-            final_candidates.append(
-                (word, (s1 + s2) / 2)
-            )
+        # chosen = random.sample(
+        #     final_candidates,
+        #     k=min(num_distractors, len(final_candidates))
+        # )
 
-        if not final_candidates:
-            return []
+        # return [w.capitalize() for w, _ in chosen]
 
-        chosen = random.sample(
-            final_candidates,
-            k=min(num_distractors, len(final_candidates))
+        distractors_with_score = self.__mmr(
+            doc_embedding=emb_correct[1].reshape(1, -1), 
+            word_embedding=emb_candidates, 
+            words=candidates,
+            diversity=0.9,
+            n_results=num_distractors
         )
 
-        return [w.capitalize() for w, _ in chosen]
-
+        return [d[0].capitalize() for d in distractors_with_score]

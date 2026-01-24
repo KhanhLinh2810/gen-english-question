@@ -10,48 +10,47 @@ from src.services.AI.false_ans_generator import FalseAnswerGenerator
 
 
 class AntonymsQuestion(Question):
-    INDEX = "vocabulary"
+    INDEX = "meaning_vocabulary"
     false_ans_gen: FalseAnswerGenerator = None
-
-    def __init__(self):
-        if self.false_ans_gen is None:
-            self.false_ans_gen = FalseAnswerGenerator()
 
     def generate_questions(self, list_words: List[str] = None, num_question: int = 1,
                            num_ans_per_question: int = 4, cefr: int = 3):
 
         list_words = list_words or []
         list_unique_words = set(list_words)
+        random.shuffle(list_unique_words)
 
         result = []
         used_words = set()
+        false_ans_gen = FalseAnswerGenerator()
 
         for _ in range(num_question):
-            question_word, correct_answer = \
+            question_word, correct_answer, list_antonym_with_question_word = \
                 self._pick_question_word(list_unique_words, used_words, cefr)
 
-            choices = [correct_answer]
+            choices = [{
+                "content": correct_answer,
+                "is_correct": True
+            }]
 
-            distractors = self.false_ans_gen.generate_distractors_from_antonyms(
-                target_word=[correct_answer, question_word],
-                num_false_answers=num_ans_per_question - 1
+            distractors = false_ans_gen.generate_distractors_from_antonyms(
+                correct_words=[correct_answer, question_word],
+                num_distractors=num_ans_per_question - 1,
+                list_antonym_with_question_word  = list_antonym_with_question_word
             )
-            choices.extend(distractors)
-            random.shuffle(choices)
 
-            final_choices = []
-            for c in choices:
-                final_choices.append({
-                    "content": c,
-                    "is_correct": c == correct_answer
+            for d in distractors:
+                choices.append({
+                    "content": d.lower(),
+                    "is_correct": False
                 })
+            random.shuffle(choices)
 
             result.append({
                 "content": QuestionContentEnum.ANTONYM.value.format(word=question_word),
                 "type": QuestionTypeEnum.ANTONYM,
-                "choices": final_choices,
+                "choices": choices,
             })
-
         return result
     
     # -----------------------------------------------------
@@ -95,11 +94,11 @@ class AntonymsQuestion(Question):
                 continue
 
             correct = random.choice(valid_syns)
-            return source, correct
+            return source, correct, valid_syns
 
         # FALLBACK ES
         while True:
-            doc = self.get_random(self.INDEX, None, cefr=cefr)
+            doc = self.get_random(self.INDEX)
             if not doc:
                 continue
 
@@ -113,4 +112,4 @@ class AntonymsQuestion(Question):
             if not valid_syns:
                 continue
 
-            return source, random.choice(valid_syns)
+            return source, random.choice(valid_syns), valid_syns
