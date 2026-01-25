@@ -53,7 +53,7 @@ config = {
     },
     "evaluation": {
         "weights": {
-            "structure": env_float("WEIGHT_STRUCTURE", 0.2),
+            "structure": env_float("WEIGHT_STRUCTURE", 0.4),
             "popularity": env_float("WEIGHT_POPULARITY", 0.2),
             "distractor": env_float("WEIGHT_DISTRACTOR", 0.4),
             "ai_adjust_factor": env_float("WEIGHT_AI_ADJUST_FACTOR", 0.8),
@@ -61,8 +61,8 @@ config = {
 
         "penalty_for_error": {
             "structure": {
-                "missing_question_text": env_float("PENALTY_MISSING_QUESTION_TEXT", 0.4),
-                "missing_choice": env_float("PENALTY_MISSING_CHOICE", 0.2),
+                "missing_question_text": env_float("PENALTY_MISSING_QUESTION_TEXT", 0.6),
+                "missing_choice": env_float("PENALTY_MISSING_CHOICE", 0.4),
                 "no_correct_answer": env_float("PENALTY_NO_CORRECT_ANSWER", 0.4),
                 "empty_choice": env_float("PENALTY_EMPTY_CHOICE", 0.1),
                 "duplicated_choices": env_float("PENALTY_DUPLICATED_CHOICES", 0.1),

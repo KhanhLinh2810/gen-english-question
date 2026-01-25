@@ -72,7 +72,7 @@ class QuestionQualityEvaluator:
             issues.append("missing_question_text")
             score -= self.penalties["missing_question_text"]
         elif q["type"] == QuestionTypeEnum.FILL_IN_BLANK and q["explanation"] and q["explanation"].strip():
-            grammar_count, grammar_msgs = self._check_grammar(q["explanation"])
+            grammar_count, grammar_msgs = self._check_grammar(self.remove_underscore(q["explanation"]))
             if grammar_count > 0:
                 issues.append({
                     "type": "question_grammar_error",
@@ -81,7 +81,7 @@ class QuestionQualityEvaluator:
                 })
                 score -= grammar_count * self.penalties["grammar_error"]
         else:
-            grammar_count, grammar_msgs = self._check_grammar(q["content"])
+            grammar_count, grammar_msgs = self._check_grammar(self.remove_underscore(q["content"]))
             if grammar_count > 0:
                 issues.append({
                     "type": "question_grammar_error",
@@ -121,7 +121,7 @@ class QuestionQualityEvaluator:
                 score -= self.penalties["no_correct_answer"]
 
             for content in unique_contents:
-                grammar_count, grammar_msgs = self._check_grammar(content)
+                grammar_count, grammar_msgs = self._check_grammar(self.remove_underscore(content))
                 if grammar_count > 0:
                     issues.append({
                         "type": "choice_grammar_error",
@@ -400,3 +400,7 @@ class QuestionQualityEvaluator:
         if pos_ratio >= t["medium_both"] and lemma_ratio >= t["medium_both"]:
             return s["medium_both"]
         return s["low"]
+    
+    @staticmethod
+    def remove_underscore(s: str):
+        return s.replace('_', '')
