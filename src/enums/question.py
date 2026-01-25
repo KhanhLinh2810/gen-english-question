@@ -30,4 +30,11 @@ class ParagraphQuestionTypeEnum(IntEnum):
     VOCAB = 23             
     INFERENCE = 24         
     PURPOSE = 25
+
+class QuestionContentEnum(str, Enum):
+    PRONUNCIATION = 'Choose the option whose underlined part is pronounced differently from the others.'
+    STRESS = 'Choose the word whose primary stress is placed differently from the others.'
+    SYNONYM = 'Choose the word that is closest in meaning to "{word}".'
+    ANTONYM = 'Choose the word that is opposite in meaning to "{word}".'
+
     

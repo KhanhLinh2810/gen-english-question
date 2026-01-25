@@ -2,7 +2,7 @@ from typing import List
 import random
 
 from src.factories.gen_question.types.base import Question
-from src.enums import QuestionTypeEnum
+from src.enums import QuestionTypeEnum, QuestionContentEnum
 
 from src.loaders.elastic import Elastic
 from src.services.AI.false_ans_generator import FalseAnswerGenerator
@@ -25,52 +25,12 @@ class AntonymsQuestion(Question):
 
         result = []
         used_words = set()
-        used_choices = set()
 
         for _ in range(num_question):
             question_word, correct_answer = \
                 self._pick_question_word(list_unique_words, used_words, cefr)
-            
-            # max_loop = 100
-            # pos = self.get_pos({
-            #     "bool": {
-            #         "must": [
-            #             {"term": {"word.keyword": question_word.lower()}},
-            #             {"term": {"antonyms.keyword": correct_answer.lower()}}
-            #         ]
-            #     }
-            # })
-            # used_words.update([question_word, correct_answer])
 
             choices = [correct_answer]
-
-            # while len(choices) < num_ans_per_question and max_loop > 0:
-            #     doc = self.get_random(self.INDEX, None, cefr=cefr, pos=pos)
-            #     if not doc:
-            #         continue
-
-            #     candidate = doc["word"]
-
-            #     # Loại trừ điều kiện chung
-            #     if (
-            #         candidate in used_choices or
-            #         candidate in used_words or
-            #         candidate in antonym_set or
-            #         candidate == question_word or
-            #         candidate == correct_answer
-            #     ):
-            #         continue
-
-            #     # Loại distractor có nghĩa trùng với đáp án
-            #     syns = set(self.get_list_antonym(candidate))
-            #     if correct_answer in syns:
-            #         continue
-
-            #     choices.append(candidate)
-            #     used_choices.add(candidate)
-            #     max_loop -= 1
-
-
 
             distractors = self.false_ans_gen.generate_distractors_from_antonyms(
                 target_word=[correct_answer, question_word],
@@ -87,8 +47,8 @@ class AntonymsQuestion(Question):
                 })
 
             result.append({
-                "content": question_word,
-                "type": QuestionTypeEnum.SYNONYM,
+                "content": QuestionContentEnum.ANTONYM.value.format(word=question_word),
+                "type": QuestionTypeEnum.ANTONYM,
                 "choices": final_choices,
             })
 
