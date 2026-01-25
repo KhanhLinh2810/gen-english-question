@@ -55,10 +55,10 @@ class RearrangenQuestion(Question):
             random.shuffle(shuffled_words)
             question = " / ".join(shuffled_words)
             
-            for i in range(num_ans_per_question-1):
+            for _ in range(num_ans_per_question-1):
                 random.shuffle(shuffled_words)
                 choices.append({
-                    "content": " / ".join(shuffled_words),
+                    "content": " ".join(shuffled_words),
                     "is_correct": False
                 })
 
@@ -69,3 +69,4 @@ class RearrangenQuestion(Question):
             })
             
         return result
+        

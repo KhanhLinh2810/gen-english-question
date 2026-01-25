@@ -112,13 +112,10 @@ class Question(ABC):
         
 
         for call in raw_output["tool_calls"]:
-            print(name_function, call)
-
             if call.get("name") != name_function:
                 continue
 
             list_questions = call.get("arguments", {}).get("questions", [])
-            print(list_questions)
             for q in list_questions:
                 raw_choices = q.get("choices", [])
                 list_answer = q.get("answer")

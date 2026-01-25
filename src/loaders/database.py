@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from sqlalchemy import Text, DateTime, JSON, String
+from sqlalchemy import Boolean, Integer, Text, DateTime, JSON, String, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -40,13 +40,28 @@ class AIQuestion(Base):
     __tablename__ = "ai_questions"
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    content: Mapped[str] = mapped_column(Text)  
-    type: Mapped[str] = mapped_column(String(50)) 
+    content: Mapped[str] = mapped_column(Text)
+    paragraph: Mapped[str] = mapped_column(Text)  
+    type: Mapped[int] = mapped_column(Integer, nullable=False)
+    is_check_by_ai: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_correct_answer: Mapped[bool] = mapped_column(Boolean, default=True)
+    correct_choice_index: Mapped[int] = mapped_column(Integer)
     
     # [{"content": "...", "explaination": "...", "is_correct": true}, ...]
     choices: Mapped[list] = mapped_column(JSON) 
-    
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        server_default=func.now(),
+        nullable=False
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )
+
 
 async def init_db():
     async with engine.begin() as conn:
@@ -64,22 +79,29 @@ async def get_db():
         finally:
             await db.close()
 
-async def save_questions_to_db(list_questions: list, db: AsyncSession):
-    """Hàm hỗ trợ lưu nhanh danh sách câu hỏi"""
-    new_objs = [AIQuestion(content=str(q)) for q in list_questions]
-    db.add_all(new_objs)
-    await db.flush()
-    return len(new_objs)
-
-async def save_questions_task(final_data: list):
+async def save_questions_task(saved_data: list):
     """Hàm này sẽ chạy ngầm sau khi user đã nhận được phản hồi"""
     async with SessionLocal() as db:
         try:
+            final_data = saved_data["final_data"]
+            paragraph = saved_data.get("paragraph", None)
             for item in final_data:
                 new_db_question = AIQuestion(
-                    content=json.dumps(item, ensure_ascii=False)
+                    content=item["content"].value
+                    if hasattr(item["content"], "value")
+                    else item["content"],
+
+                    paragraph = paragraph,
+
+                    type=item["type"].value
+                    if hasattr(item["type"], "value")
+                    else item["type"],
+
+                    choices=item["choices"]
                 )
+
                 db.add(new_db_question)
             await db.commit()
         except Exception as e:
+            print("Have error when save question", e)
             await db.rollback()

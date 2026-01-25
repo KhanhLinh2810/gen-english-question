@@ -1,14 +1,18 @@
 from src.enums import ParagraphQuestionTypeEnum
 from src.interfaces.question import ICreateQuestionForParagraph
 from src.factories.gen_question_for_paragraph.types.base import Question
-from src.llms.models import GeminiLLM
+from src.llms.models import GeminiLLM, OpenAILLM
 from src.llms.prompts import GEN_FACT_QUESTION_PROMPT, GEN_MAIN_IDEA_QUESTION_PROMPT, GEN_PURPOSE_QUESTION_PROMPT, GEN_INFERENCE_QUESTION_PROMPT, GEN_VOCAB_QUESTION_PROMPT
 from src.llms.tools import GEN_QUESTION_FOR_PARAGRAPH_OUTPUT_TOOL
+import random
 
 
 class ParagraphQuestion(Question):
-    def __init__(self):
-        self.llm = GeminiLLM()
+    def __init__(self, model='open_ai'):
+        if model == 'gemini':
+            self.llm = GeminiLLM()
+        else:
+            self.llm = OpenAILLM()
 
     def generate_questions(self, data: ICreateQuestionForParagraph):
         result = []
@@ -58,9 +62,17 @@ class ParagraphQuestion(Question):
             data = call.get("arguments", {})
 
             for question in data.get("list_questions", []):
+                answer = question.get("answer")
+                raw_choices = question.get("choices", [])
+                final_choices = []
+                for c in raw_choices:
+                    final_choices.append({
+                        "content": c,
+                        "is_correct": c == answer
+                    })
+                random.shuffle(final_choices)
                 result.append({
                     "content": question.get("question"),
                     "type": qtype,
-                    "choices": question.get("choices", []),
-                    "answer": question.get("answer"),
+                    "choices": final_choices
                 })

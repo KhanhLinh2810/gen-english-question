@@ -35,30 +35,55 @@ async def generate_question(body: ICreateQuestion, background_tasks: BackgroundT
             **q,
             "score": res_eval["score"] 
         })
-        
-    background_tasks.add_task(save_questions_task, final_data)  
+
+    saved_data = {
+        "final_data": final_data
+    }        
+    background_tasks.add_task(save_questions_task, saved_data)  
     return JSONResponse(status_code=200, content=res_ok(final_data))
 
 @route.post('/sentence')
-async def generate_questions_from_sentence(body: ICreateQuestionForParagraph):
-    evaluator = QuestionQualityEvaluator()
-    print(evaluator._grammar_tool(body.paragraph))
-    # error_sentences = []
-    # model_input = ModelInput(**body.model_dump(), user_id=None)
-    # try:
-    #     new_questions =  generate_and_store_questions(model_input)
-    # except Exception as e:
-    #     # Không để là model_input.context mà là request.context vì model_input.context là tiếng Anh
-    #     print(f"Lỗi khi xử lí câu: {body.context}. Lỗi: {e}")
-    #     error_sentences.append({'sentence': body.context, 'error': str(e)})
-
-    # result = {
-    #     "success": new_questions,
-    #     "fail": error_sentences
-    # }
+async def generate_questions_from_sentence(body: ICreateQuestionForParagraph, background_tasks: BackgroundTasks):
     question = create_question_paragraph_instance()
     list_questions = question.generate_questions(data=body)
-    return JSONResponse(status_code=200, content=res_ok(list_questions))
+    evaluator = QuestionQualityEvaluator()
+    final_data = []
+    for q in list_questions:
+        data = {**body.model_dump(), **q} 
+        
+        res_eval = evaluator.evaluate(data)
+        final_data.append({
+            **q,
+            "score": res_eval["score"] 
+        })
+        
+    saved_data = {
+        "final_data": final_data,
+        "paragraph": body.paragraph
+    }        
+    background_tasks.add_task(save_questions_task, saved_data)  
+    return JSONResponse(status_code=200, content=res_ok(final_data))
+
+# @route.post('/sentence')
+# async def generate_questions_from_sentence(body: ICreateQuestionForParagraph):
+#     evaluator = QuestionQualityEvaluator()
+#     print(evaluator._grammar_tool(body.paragraph))
+#     # error_sentences = []
+#     # model_input = ModelInput(**body.model_dump(), user_id=None)
+#     # try:
+#     #     new_questions =  generate_and_store_questions(model_input)
+#     # except Exception as e:
+#     #     # Không để là model_input.context mà là request.context vì model_input.context là tiếng Anh
+#     #     print(f"Lỗi khi xử lí câu: {body.context}. Lỗi: {e}")
+#     #     error_sentences.append({'sentence': body.context, 'error': str(e)})
+
+#     # result = {
+#     #     "success": new_questions,
+#     #     "fail": error_sentences
+#     # }
+#     question = create_question_paragraph_instance()
+#     list_questions = question.generate_questions(data=body)
+#     return JSONResponse(status_code=200, content=res_ok(list_questions))
 
 # async def generate_and_store_questions(self, request):
 #         """Generate questions from user request and store results in Firestore.

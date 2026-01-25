@@ -3,28 +3,29 @@ from fastapi.concurrency import asynccontextmanager
 
 
 from src.loaders.database import init_db
-from src.services.schedule import verify_answer_by_ai
+from src.services.schedule.verify_answer_by_ai import verify_answer_by_ai
 from src.routers.public.public import router
 from src.utils.response import handler_error
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
 
-    # scheduler = BackgroundScheduler()
-    # # Chạy lúc 3 giờ sáng mỗi ngày
-    # scheduler.add_job(
-    #     verify_answer_by_ai, 
-    #     trigger='cron', 
-    #     hour=3, 
-    #     minute=0
-    # )
-    # scheduler.start()
+    scheduler = AsyncIOScheduler()    
+    # Chạy lúc 3 giờ sáng mỗi ngày
+    scheduler.add_job(
+        verify_answer_by_ai, 
+        trigger='cron', 
+        hour=6, 
+        minute=3
+    )
+    scheduler.start()
+
         
     yield  
     
-    # scheduler.shutdown()
+    scheduler.shutdown()
     
 app = FastAPI(lifespan=lifespan)
 @app.exception_handler(Exception)
