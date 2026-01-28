@@ -59,9 +59,16 @@ class ParagraphQuestion(Question):
         for call in raw_output["tool_calls"]:
             if call.get("name") != "parse_paragraph_questions":
                 continue
-            data = call.get("arguments", {})
+            if "arguments" in call:
+                data = call.get("arguments")
+                if isinstance(data, list):
+                    list_questions = data
+                elif isinstance(data, dict):
+                    list_questions = data.get("list_questions", [])
+                else:
+                    list_questions = []
 
-            for question in data.get("list_questions", []):
+            for question in list_questions:
                 answer = question.get("answer")
                 raw_choices = question.get("choices", [])
                 final_choices = []
