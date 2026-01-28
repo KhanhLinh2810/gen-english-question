@@ -19,6 +19,22 @@ def env_int_list(key: str, default: list[int]) -> list[int]:
         return list(map(int, json.loads(val)))
     except Exception:
         return default
+
+def env_bool(key: str, default: bool) -> bool:
+    val = os.getenv(key)
+    if val is None:
+        return default
+    return val.lower() in ("true", "1", "yes", "y", "t")
+
+
+def env_list(key: str, default: list[str]) -> list[str]:
+    try:
+        val = os.getenv(key)
+        if val is None:
+            return default
+        return json.loads(val)
+    except Exception:
+        return default
     
 config = {
     "app": {
@@ -39,6 +55,16 @@ config = {
         "expired_in": int(os.getenv("JWT_EXPIRATION_DELTA") or 24), # hour
         "algorithm": os.getenv("JWT_ALGORITHM"),
         "secret_key": os.getenv("JWT_SECRET"),
+    },
+    "email": {
+        "admin": {
+            "email": os.getenv("ADMIN_EMAIL", ""),
+            "password": os.getenv("ADMIN_EMAIL_PASSWORD", ""),
+            "name": os.getenv("ADMIN_EMAIL_NAME", "System Admin"),
+        },
+        "report": {
+            "llm_email": os.getenv("REPORT_LLM_EMAIL", ""),
+        },
     },
     "google": {
         "api_key": os.getenv("GOOGLE_API_KEY"),

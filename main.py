@@ -17,9 +17,16 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(
         verify_answer_by_ai, 
         trigger='cron', 
-        hour=6, 
-        minute=3
+        hour=3, 
+        minute=0
     )
+    # scheduler.add_job(
+    #     verify_answer_by_ai, 
+    #     trigger='interval', 
+    #     seconds=12,
+    #     max_instances=1,  # Chỉ chạy 1 instance tại 1 thời điểm
+    #     misfire_grace_time=1500  # Cho phép trễ tối đa 30s
+    # )
     scheduler.start()
 
         

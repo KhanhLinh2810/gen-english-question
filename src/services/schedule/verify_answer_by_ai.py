@@ -1,11 +1,15 @@
 from collections import defaultdict
+from datetime import datetime
+import json
 from typing import Dict, List
 import random
+from src.services.mail.mail import create_json_file, send_json_email
 from src.llms.prompts import VERIFY_ANSWER_BY_AI_PROMPT
 from src.llms.tools import VERIFY_ANSWER_BY_AI_TOOL
-from src.llms.models.gemini import GeminiLLM
+from src.llms.models import GeminiLLM, OpenAILLM
 from src.loaders.database import SessionLocal, AIQuestion
 from src.enums.question import ParagraphQuestionTypeEnum, QuestionTypeEnum
+from env import config
 from sqlalchemy import Sequence, select
 
 target_values = [e.value for e in [
@@ -39,8 +43,18 @@ async def verify_answer_by_ai():
 
             questions_by_type = classify_questions_by_type(questions)
             llm = GeminiLLM()
+            # llm = OpenAILLM
 
-            for _ in range(20):
+            done_check_question = []
+            report_data = {
+                "timestamp": datetime.now().isoformat(),
+                "checked_questions": 0,
+                "incorrect_answers": 0,
+                "correct_answers": 0,
+                "questions": []
+            }
+
+            for _ in range(1):
                 if not questions_by_type:
                     break
 
@@ -83,15 +97,25 @@ async def verify_answer_by_ai():
                         continue
 
                     if system_choice_index != llm_choice_index:
+                        report_data["incorrect_answers"] += 1
                         question.is_correct_answer = False
                         question.correct_choice_index = llm_choice_index
                     else:
+                        report_data["correct_answers"] += 1
                         question.is_correct_answer = True
 
                     question.is_check_by_ai = True
 
+                done_check_question.extend(selected_questions)
+
+
             await db.commit()
-            # print("Task verify hoàn tất.")
+
+            if len(done_check_question) > 0:
+                report_data["checked_questions"] = len(done_check_question)
+                report_data["questions"] = json.dumps([q.to_dict() for q in done_check_question], 
+                                    ensure_ascii=False, indent=2)
+                send_report(report_data)
 
         except Exception as e:
             await db.rollback()
@@ -147,3 +171,25 @@ def parse_raw_tool_output(raw_output):
             })
 
     return results
+
+def send_report(json_data):
+    subject = "Báo cáo kiểm tra đáp án bằng AI"
+    body_content = f"""
+Đây là báo cáo hàng ngày về kiểm tra đáp án bằng LLM.
+
+Thời gian: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+Số câu đã kiểm tra: {json_data["checked_questions"]}
+Số câu đúng: {json_data["correct_answers"]}
+Số câu sai: {json_data["incorrect_answers"]}
+Tỷ lệ chính xác: {json_data["correct_answers"]/json_data["checked_questions"]*100 if json_data["checked_questions"] > 0 else 0:.2f}%
+"""
+    
+    # Tạo file JSON đính kèm
+    attachment = create_json_file(json_data, f"report_duplicheck_answer_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+    # Gửi email
+    send_json_email(
+        config["email"]["report"]["llm_email"], 
+        subject, 
+        body_content, 
+        attachment
+    )

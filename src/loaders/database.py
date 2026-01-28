@@ -1,9 +1,11 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import Boolean, Integer, Text, DateTime, JSON, String, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.inspection import inspect
+
 
 # Import config từ file env của bạn
 from env import config
@@ -61,7 +63,16 @@ class AIQuestion(Base):
         onupdate=func.now(),
         nullable=False
     )
+    def to_dict(self):
+        data = {}
+        for c in inspect(self).mapper.column_attrs:
+            value = getattr(self, c.key)
 
+            if isinstance(value, (datetime, date)):
+                value = value.isoformat()
+
+            data[c.key] = value
+        return data
 
 async def init_db():
     async with engine.begin() as conn:
