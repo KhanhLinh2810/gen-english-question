@@ -128,10 +128,17 @@ class Question(ABC):
 
                 for c in raw_choices:
                     is_correct = c in list_answer
-                    choices.append({
-                        "content": c,
-                        "is_correct": is_correct
-                    })
+                    if not is_correct:
+                        choices.append({
+                            "content": c,
+                            "is_correct": is_correct
+                        })
+                    else: 
+                        choices.append({
+                            "content": c,
+                            "is_correct": is_correct,
+                            "explanation": q.get("explanation")
+                        })
                     if is_correct:
                         count_correct += 1
 
